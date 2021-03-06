@@ -1,4 +1,4 @@
-const clientId = '04dca0de1c4e4aca88cc615ac23581be';
+const clientId = 'a2c308607e3d460686ee7523f9394a64';
 const redirectUri =
   'location' in global && global['location']['host'] === 'localhost:3000'
     ? 'http://localhost:3000/callback'
