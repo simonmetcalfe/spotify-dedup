@@ -4,6 +4,7 @@
 // ./pages/_document.js
 import Document, { Html, Head, Main, NextScript } from 'next/document';
 import i18n from '../i18n';
+console.log('pages/_document.js:  running')
 
 class MyDocument extends Document {
   static async getInitialProps(ctx) {

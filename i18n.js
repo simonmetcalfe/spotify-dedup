@@ -1,6 +1,8 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
+console.log('i18n.js:  running')
+
 export const AvailableLanguages = [
   'de',
   'en',

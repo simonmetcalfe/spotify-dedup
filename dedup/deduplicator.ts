@@ -17,6 +17,10 @@ class BaseDeduplicator {
   }
 
   static findDuplicatedTracks(tracks: Array<SpotifyTrackType>) {
+    for (let i = 0; i < tracks.length; i++) {
+      console.log('deduplicator.ts:  findDuplicatedTracks running for tracks ' + tracks[i].name)
+    }
+
     const seenIds: { [key: string]: boolean } = {};
     const seenNameAndArtist: { [key: string]: Array<number> } = {};
     const result = tracks.reduce((duplicates, track, index) => {
@@ -83,6 +87,9 @@ export class PlaylistDeduplicator extends BaseDeduplicator {
               tracks.push(item && item.track);
             });
           });
+          for (let i = 0; i < tracks.length; i++) {
+            console.log('deduplicator.ts:  getTracks got track ' + tracks[i].name)
+          }
           resolve(tracks);
         })
         .catch(reject);
@@ -94,6 +101,7 @@ export class PlaylistDeduplicator extends BaseDeduplicator {
     playlistModel: PlaylistModel
   ) {
     return new Promise((resolve, reject) => {
+      console.log('deduplicator.ts:  removeDuplicates for playlist tracks is called')
       if (playlistModel.playlist.id === 'starred') {
         reject(
           'It is not possible to delete duplicates from your Starred playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.'
@@ -185,6 +193,7 @@ export class SavedTracksDeduplicator extends BaseDeduplicator {
     }
   ) {
     return new Promise((resolve, reject) => {
+      console.log('deduplicator.ts:  removeDuplicates for saved tracks is called')
       const tracksToRemove: Array<string> = model.duplicates.map((d) =>
         d.track.linked_from ? d.track.linked_from.id : d.track.id
       );

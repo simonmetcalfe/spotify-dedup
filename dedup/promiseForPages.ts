@@ -26,6 +26,7 @@ async function fetchGeneric(
   offset: number,
   limit: number
 ) {
+  console.log('promiseForPages.ts:  fetchGeneric called for href ' + href)
   return api.getGeneric(
     `${stripParameters(href)}?offset=${offset}&limit=${limit}`
   );
@@ -37,6 +38,7 @@ async function fetchPageWithDefaults(
   offset: number,
   limit: number
 ) {
+  console.log('promiseForPages.ts:  fetchPageWithDefaults called for href ' + href)
   let result: PaginableResultType = null;
 
   try {
@@ -63,6 +65,7 @@ async function fetchPageWithDefaults(
       total: null,
     };
   }
+  console.log('promiseForPages.ts:  fetchPageWithDefaults called and returning result ' + result)
   return result;
 }
 
@@ -70,6 +73,7 @@ export default async function promisesForPages(
   api: SpotifyWebApi,
   initialRequest
 ): Promise<Array<any>> {
+  console.log('promiseForPages.ts:  promisesForPages Promise array initial request ' + initialRequest)
   const results = await initialRequest;
   if (results === null) {
     return [];
@@ -90,6 +94,7 @@ export default async function promisesForPages(
             limit
           )
         );
+        console.log('promiseForPages.ts:  promisesForPages returning prev ' + prev)
         return prev;
       },
       [() => initialRequest]

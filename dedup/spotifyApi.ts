@@ -83,6 +83,7 @@ const parseAPIResponse = (response: Response): Object =>
       let parsedJSON: Object = null;
       try {
         parsedJSON = responseBody === '' ? null : JSON.parse(responseBody);
+        console.log('spotifyApi.ts:  parseAPIResponse running with RESPONSE ' + response + " and RESPONSE BODY " + responseBody)
       } catch (e) {
         // We should never get these unless response is mangled
         // Or API is not properly implemented
@@ -112,12 +113,13 @@ export default class SpotifyWebApi {
   }
 
   async getGeneric(url: string, options = {}) {
+    console.log('spotifyApi.ts:  getGeneric called with url ' + url + " and options " + options)
     const optionsString =
       Object.keys(options).length === 0
         ? ''
         : `?${Object.keys(options)
-            .map((k) => `${k}=${options[k]}`)
-            .join('&')}`;
+          .map((k) => `${k}=${options[k]}`)
+          .join('&')}`;
 
     try {
       const res = await fetch({
@@ -129,6 +131,7 @@ export default class SpotifyWebApi {
           },
         },
       });
+      console.log('spotifyApi.ts:  getGeneric returning with response ' + res)
       return parseAPIResponse(res);
     } catch (e) {
       console.error('e', e);
@@ -137,6 +140,7 @@ export default class SpotifyWebApi {
   }
 
   async getUserPlaylists(userId: string, options?: { limit?: number }) {
+    console.log('spotifyApi.ts:  getUserPlaylists called')
     const url =
       typeof userId === 'string'
         ? `${apiPrefix}/users/${encodeURIComponent(userId)}/playlists`
@@ -149,6 +153,9 @@ export default class SpotifyWebApi {
     playlistId: string,
     uris: Array<string | { uri: string; positions: number[] }>
   ) {
+    for (let i = 0; i < uris.length; i++) {
+      console.log('spotifyApi.ts:  removeTracksFromPlaylist called with uris ' + uris[i])
+    }
     const dataToBeSent = {
       tracks: uris.map((uri) => (typeof uri === 'string' ? { uri: uri } : uri)),
     };
@@ -169,10 +176,14 @@ export default class SpotifyWebApi {
   }
 
   async getMySavedTracks(options?: { limit?: number }) {
+    console.log('spotifyApi.ts:  getMySavedTracks called with options ' + options)
     return this.getGeneric(`${apiPrefix}/me/tracks`, options);
   }
 
   async removeFromMySavedTracks(trackIds: Array<string>) {
+    for (let i = 0; i < trackIds.length; i++) {
+      console.log('spotifyApi.ts:  removeFromMySavedTracks called with trackIds ' + trackIds[i])
+    }
     const res = await fetch({
       url: `${apiPrefix}/me/tracks`,
       options: {

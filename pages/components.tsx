@@ -4,6 +4,7 @@ import Badge from './../components/badge';
 import Panel from './../components/panel';
 import { DuplicateTrackListItem } from '../components/duplicateTrackListItem';
 import { DuplicateTrackList } from '../components/duplicateTrackList';
+console.log('pages/components.tsx:  running')
 
 const Components = (props: { children: React.ReactNode }) => <Page>
   <h2>Panel</h2>

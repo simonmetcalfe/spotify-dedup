@@ -14,6 +14,8 @@ import { useTranslation } from 'react-i18next';
 
 import i18n, { AvailableLanguages } from '../../i18n';
 
+console.log('components/pages/index.js:  running')
+
 const MetaHead = () => {
   const { t, i18n } = useTranslation();
   return (
@@ -27,9 +29,8 @@ const MetaHead = () => {
       <meta name="viewport" content="width=device-width" />
       <link
         rel="canonical"
-        href={`https://spotify-dedup.com/${
-          i18n.language === 'en' ? '' : i18n.language + '/'
-        }`}
+        href={`https://spotify-dedup.com/${i18n.language === 'en' ? '' : i18n.language + '/'
+          }`}
       />
       {AvailableLanguages.filter((language) => language !== i18n.language).map(
         (language) => (
@@ -101,8 +102,8 @@ export default class Index extends React.Component {
         {this.state.isLoggedIn ? (
           <Main api={Index.api} user={this.state.user} />
         ) : (
-          <Intro onLoginClick={this.handleLoginClick} />
-        )}
+            <Intro onLoginClick={this.handleLoginClick} />
+          )}
         {this.state.isLoggedIn
           ? null
           : [<Features key={0} />, <Reviews key={1} />]}
