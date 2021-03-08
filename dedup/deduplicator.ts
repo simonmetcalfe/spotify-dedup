@@ -17,12 +17,20 @@ class BaseDeduplicator {
   }
 
   static findDuplicatedTracks(tracks: Array<SpotifyTrackType>) {
+    var tracklist = '';
     for (let i = 0; i < tracks.length; i++) {
-      console.log('deduplicator.ts:  findDuplicatedTracks running for tracks ' + tracks[i].name)
+      tracklist += tracks[i].name + ', '
     }
+    console.log('deduplicator.ts:  findDuplicatedTracks running for tracks ' + tracklist)
 
     const seenIds: { [key: string]: boolean } = {};
     const seenNameAndArtist: { [key: string]: Array<number> } = {};
+
+    var tracklist = '';
+    for (let i = 0; i < tracks.length; i++) {
+      tracklist += tracks[i].name + ', '
+    }
+    console.log('deduplicator.ts:  findDuplicatedTracks array before reduce is ' + tracklist)
     const result = tracks.reduce((duplicates, track, index) => {
       if (track === null) return duplicates;
       if (track.id === null) return duplicates;
@@ -31,6 +39,7 @@ class BaseDeduplicator {
       if (track.id in seenIds) {
         // if the two tracks have the same Spotify ID, they are duplicates
         isDuplicate = true;
+        console.log('deduplicator.ts:  tracks.reduce found duplicate ' + track.id + ' ' + track.name)
       } else {
         // if they have the same name, main artist, and roughly same duration
         // we consider tem duplicates too
@@ -42,6 +51,7 @@ class BaseDeduplicator {
             ).length !== 0
           ) {
             isDuplicate = true;
+            console.log('deduplicator.ts:  tracks.reduce found similar ' + track.id + ' ' + track.name)
           }
         }
       }
@@ -59,6 +69,12 @@ class BaseDeduplicator {
       }
       return duplicates;
     }, []);
+
+    var tracklist = '';
+    for (let i = 0; i < result.length; i++) {
+      tracklist += result[i].track.name + ', ' + result[i].index + ', ' + result[i].track.id + ', '
+    }
+    console.log('deduplicator.ts:  findDuplicatedTracks array after reduce is ' + tracklist)
     return result;
   }
 }
@@ -70,6 +86,7 @@ export class PlaylistDeduplicator extends BaseDeduplicator {
   ): Promise<Array<SpotifyTrackType>> {
     return new Promise((resolve, reject) => {
       const tracks = [];
+      console.log('deduplicator.ts:  PlaylistDeduplicator getTracks running for playlist ' + playlist.name)
       promisesForPages(
         api,
         api.getGeneric(playlist.tracks.href) // 'https://api.spotify.com/v1/users/11153223185/playlists/0yygtDHfwC7uITHxfrcQsF/tracks'
@@ -156,6 +173,7 @@ export class SavedTracksDeduplicator extends BaseDeduplicator {
   ): Promise<Array<SpotifyTrackType>> {
     return new Promise((resolve, reject) => {
       const tracks = [];
+      console.log('deduplicator.ts:  SavedTracksDeduplicator getTracks running for saved tracks ')
       promisesForPages(api, initialRequest)
         .then((
           pagePromises // todo: I'd love to replace this with

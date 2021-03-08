@@ -10,7 +10,7 @@ export const fetchUserOwnedPlaylists = async (
     api,
     api.getUserPlaylists(userId, { limit: 50 })
   );
-
+  console.log('library.ts:  about to run pages.reduce')
   return pages.reduce(
     (array, currentPage) =>
       array.concat(

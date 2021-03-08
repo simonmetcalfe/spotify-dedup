@@ -1,3 +1,5 @@
+
+
 import fetch from './customFetch';
 export type SpotifyArtistType = {
   id: string;
@@ -83,7 +85,7 @@ const parseAPIResponse = (response: Response): Object =>
       let parsedJSON: Object = null;
       try {
         parsedJSON = responseBody === '' ? null : JSON.parse(responseBody);
-        console.log('spotifyApi.ts:  parseAPIResponse running with RESPONSE ' + response + " and RESPONSE BODY " + responseBody)
+        console.log('spotifyApi.ts:  parseAPIResponse running with RESPONSE ' + JSON.stringify(response) + " and RESPONSE BODY " + responseBody)
       } catch (e) {
         // We should never get these unless response is mangled
         // Or API is not properly implemented
@@ -109,15 +111,18 @@ export default class SpotifyWebApi {
   }
 
   async getMe() {
+    console.log('spotifyApi.ts:  Initial storage (getMe) is currently ' + JSON.stringify(localStorage))
+    console.log('spotifyApi.ts:  Adding test item to local storage:  simonkey:simonvalue')
+    localStorage.setItem('simonkey', 'simovalue');
     return await this.getGeneric(`${apiPrefix}/me`);
   }
 
   async getGeneric(url: string, options = {}) {
-    console.log('spotifyApi.ts:  getGeneric called with url ' + url + " and options " + options)
+    console.log('spotifyApi.ts:  getGeneric called with url ' + url + " and options " + JSON.stringify(options))
     const optionsString =
       Object.keys(options).length === 0
-        ? ''
-        : `?${Object.keys(options)
+        ? ''  // If the length of Options is 0, return a blank string
+        : `?${Object.keys(options) // Otherwise, create string starting with ?
           .map((k) => `${k}=${options[k]}`)
           .join('&')}`;
 
@@ -131,7 +136,7 @@ export default class SpotifyWebApi {
           },
         },
       });
-      console.log('spotifyApi.ts:  getGeneric returning with response ' + res)
+      console.log('spotifyApi.ts:  getGeneric returning with response ' + JSON.stringify(res))
       return parseAPIResponse(res);
     } catch (e) {
       console.error('e', e);
@@ -176,7 +181,7 @@ export default class SpotifyWebApi {
   }
 
   async getMySavedTracks(options?: { limit?: number }) {
-    console.log('spotifyApi.ts:  getMySavedTracks called with options ' + options)
+    console.log('spotifyApi.ts:  getMySavedTracks called with options ' + JSON.stringify(options))
     return this.getGeneric(`${apiPrefix}/me/tracks`, options);
   }
 

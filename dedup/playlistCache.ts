@@ -5,6 +5,7 @@ export default class PlaylistCache {
     console.log('playlistCache.ts:  needsCheckForDuplicates is called for playlist ' + playlist.name)
     if ('snapshot_id' in playlist) {
       try {
+        console.log('playlistCache.ts:  Getting item from localStorage:  ' + playlist.snapshot_id + ':' + SNAPSHOT_VERSION)
         if (localStorage.getItem(playlist.snapshot_id) === SNAPSHOT_VERSION) {
           return false;
         }
@@ -19,8 +20,10 @@ export default class PlaylistCache {
     console.log('playlistCache.ts:  storePlaylistWithoutDuplicates is called for playlist ' + playlist.name)
     if ('snapshot_id' in playlist) {
       try {
+        console.log('playlistCache.ts:  Setting item to localStorage:  ' + playlist.snapshot_id + ':' + SNAPSHOT_VERSION)
         localStorage.setItem(playlist.snapshot_id, SNAPSHOT_VERSION);
       } catch (e) { }
     }
   }
 }
+

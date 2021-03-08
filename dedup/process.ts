@@ -36,6 +36,7 @@ export default class {
   }
 
   process = async (api: SpotifyWebApi, user: SpotifyUserType) => {
+    console.log('process.ts:  process async running')
     const currentState: {
       playlists?: Array<PlaylistModel>;
       savedTracks?: {
@@ -46,6 +47,8 @@ export default class {
 
     const dispatch = this.dispatch.bind(this);
     function onPlaylistProcessed(playlist: PlaylistModel) {
+      console.log('process.ts:   process async > onPlaylistProcessed running for ' + playlist.playlist.name) // Model is just SportifyPlaylistType and duplicates array
+      console.log('Local storage is currently ' + JSON.stringify(localStorage))
       playlist.processed = true;
       var remaining = currentState.toProcess - 1;
       currentState.toProcess -= 1;
@@ -134,3 +137,5 @@ export default class {
     }
   };
 }
+
+

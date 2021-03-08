@@ -65,7 +65,7 @@ async function fetchPageWithDefaults(
       total: null,
     };
   }
-  console.log('promiseForPages.ts:  fetchPageWithDefaults called and returning result ' + result)
+  console.log('promiseForPages.ts:  fetchPageWithDefaults called and returning result ' + JSON.stringify(result))
   return result;
 }
 
@@ -73,7 +73,7 @@ export default async function promisesForPages(
   api: SpotifyWebApi,
   initialRequest
 ): Promise<Array<any>> {
-  console.log('promiseForPages.ts:  promisesForPages Promise array initial request ' + initialRequest)
+  console.log('promiseForPages.ts:  promisesForPages Promise array initial request')
   const results = await initialRequest;
   if (results === null) {
     return [];
