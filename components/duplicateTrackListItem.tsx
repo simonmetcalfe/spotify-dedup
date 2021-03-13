@@ -1,13 +1,11 @@
 import React from 'react';
 import { useTranslation, Trans } from 'react-i18next';
 import Badge from './badge';
-import { BadgeRemove } from './badgeRemove';
 
 export const DuplicateTrackListItem = ({
   reason,
   trackName,
-  trackArtistName,
-  id
+  trackArtistName
 }) => {
   const { t, i18n } = useTranslation();
 
@@ -17,7 +15,6 @@ export const DuplicateTrackListItem = ({
         <span>{{ trackName }}</span> <span className="gray">by</span>{' '}
         <span>{{ trackArtistName }}</span>
       </Trans>
-      <BadgeRemove id={id} />
       {reason === 'same-id' && (
         <Badge>{t('result.duplicate.reason-same-id')}</Badge>
       )}
