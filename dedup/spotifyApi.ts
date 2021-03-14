@@ -13,7 +13,7 @@ export type SpotifyTrackType = {
   linked_from: SpotifyTrackType;
   name: string;
   uri: string;
-  in_playlists?: Array<{ url: SpotifyPlaylistType }>;
+  // in_playlists?: Array<{ url: SpotifyPlaylistType }>; // Originally planned to store inPlaylists within the track, now it is in the PlaylistModel 
 };
 
 export type SpotifyPlaylistType = {

@@ -16,6 +16,43 @@ class BaseDeduplicator {
     throw 'Not implemented';
   }
 
+  static findDuplicatedTracksInAllPlaylists(playlist: PlaylistModel, playlists: Array<PlaylistModel>) {
+    const result = playlist.tracks.reduce((duplicates, track, index) => {
+      if (track === null) return duplicates;
+      if (track.id === null) return duplicates;
+      let isDuplicate = '';
+      const seenNameAndArtistKey = `${track.name}:${track.artists[0].name}`.toLowerCase();
+      playlists.forEach(function (playlistItem) {
+        console.log('deduplicator.ts:  Comparing ' + playlist.playlist.name + ' with ' + playlistItem.playlist);
+        playlistItem.tracks.forEach(function (trackItem) {
+          //console.log('Comparing playlist ' + playlistItem.playlist.name + ' and track ' + trackItem.name)
+          if (playlist.playlist.name != playlistItem.playlist.name) { // Don't compare playlsit with itself
+            if (track.id === trackItem.id) {
+              console.log('Dupe of ' + trackItem.name + ' found in ' + playlistItem.playlist.name)
+              isDuplicate = 'same-id';
+            }
+            else if (seenNameAndArtistKey === `${trackItem.name}:${trackItem.artists[0].name}`.toLowerCase()
+              && Math.abs(track.duration_ms - trackItem.duration_ms) < 2000) {
+              console.log('Similar dupe of ' + trackItem.name + ' found in ' + playlistItem.playlist.name)
+              isDuplicate = 'same-name-artist';
+            }
+            if (isDuplicate != '') {
+              duplicates.push({
+                index: index,
+                track: track,
+                inPlaylists: {
+                  reason: isDuplicate,
+                  playlist: playlistItem
+                }
+              })
+            }
+          }
+        });
+      });
+      return duplicates;
+    }, []);
+  }
+
   static findDuplicatedTracks(tracks: Array<SpotifyTrackType>) {
     var tracklist = '';
     for (let i = 0; i < tracks.length; i++) {
@@ -26,11 +63,6 @@ class BaseDeduplicator {
     const seenIds: { [key: string]: boolean } = {};
     const seenNameAndArtist: { [key: string]: Array<number> } = {};
 
-    var tracklist = '';
-    for (let i = 0; i < tracks.length; i++) {
-      tracklist += tracks[i].name + ', '
-    }
-    //console.log('deduplicator.ts:  findDuplicatedTracks array before reduce is ' + tracklist)
     const result = tracks.reduce((duplicates, track, index) => {
       if (track === null) return duplicates;
       if (track.id === null) return duplicates;

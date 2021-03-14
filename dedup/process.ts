@@ -74,17 +74,28 @@ export default class {
     function processAllPlaylists() {
       console.log('process.ts:  processAllPlaylists running')
       for (const playlistModel of currentState.playlists) {
+
+        // Old dedup routine, here for testing
+        //playlistModel.duplicates = PlaylistDeduplicator.findDuplicatedTracks(playlistModel.tracks);
+
+        // New dedup routine
+        console.log('process.ts:  process func about to find duplicate tracks  ' + playlistModel.playlist.name)
+        playlistModel.duplicates = PlaylistDeduplicator.findDuplicatedTracksInAllPlaylists(playlistModel, currentState.playlists);
+
         onPlaylistProcessed(playlistModel);
 
-        // Old routine, temp here just for checking if the old dupe checking still works now it all happens at the end
-        console.log('process.ts:  process func about to find duplicate tracks  ' + playlistModel.playlist.name)
-        playlistModel.duplicates = PlaylistDeduplicator.findDuplicatedTracks(playlistModel.tracks);
+
+
+
+        // Do not see the value in storing playlists that don't contain any duplicates - appears to work without it
+        /*
         if (playlistModel.duplicates.length === 0) {
+          console.log('process.ts:  Storing playlist without duplicates for playlist ' + playlistModel.playlist.name)
           playlistCache.storePlaylistWithoutDuplicates(
             playlistModel.playlist
           );
         }
-
+        */
       }
     }
 

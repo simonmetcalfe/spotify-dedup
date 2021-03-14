@@ -8,8 +8,9 @@ console.log('pages/_document.js:  running')
 
 class MyDocument extends Document {
   static async getInitialProps(ctx) {
+    // getInitialProps is old server side rendering of a page, should be either getStaticProps or getServerSideProps
     const initialProps = await Document.getInitialProps(ctx);
-    return { ...initialProps };
+    return { ...initialProps };  // A number of values will be returned
   }
 
   render() {
