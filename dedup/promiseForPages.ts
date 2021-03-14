@@ -65,7 +65,7 @@ async function fetchPageWithDefaults(
       total: null,
     };
   }
-  console.log('promiseForPages.ts:  fetchPageWithDefaults called and returning result ' + JSON.stringify(result))
+  //console.log('promiseForPages.ts:  fetchPageWithDefaults called and returning result ' + JSON.stringify(result))
   return result;
 }
 

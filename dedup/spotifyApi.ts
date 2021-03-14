@@ -13,6 +13,7 @@ export type SpotifyTrackType = {
   linked_from: SpotifyTrackType;
   name: string;
   uri: string;
+  in_playlists?: Array<{ url: SpotifyPlaylistType }>;
 };
 
 export type SpotifyPlaylistType = {
@@ -85,7 +86,7 @@ const parseAPIResponse = (response: Response): Object =>
       let parsedJSON: Object = null;
       try {
         parsedJSON = responseBody === '' ? null : JSON.parse(responseBody);
-        console.log('spotifyApi.ts:  parseAPIResponse running with RESPONSE ' + JSON.stringify(response) + " and RESPONSE BODY " + responseBody)
+        console.log('spotifyApi.ts:  parseAPIResponse running with RESPONSE ')// + JSON.stringify(response) + " and RESPONSE BODY " + responseBody)
       } catch (e) {
         // We should never get these unless response is mangled
         // Or API is not properly implemented
@@ -111,7 +112,7 @@ export default class SpotifyWebApi {
   }
 
   async getMe() {
-    console.log('spotifyApi.ts:  Initial storage (getMe) is currently ' + JSON.stringify(localStorage))
+    // console.log('spotifyApi.ts:  Initial storage (getMe) is currently ' + JSON.stringify(localStorage))
     console.log('spotifyApi.ts:  Adding test item to local storage:  simonkey:simonvalue')
     localStorage.setItem('simonkey', 'simovalue');
     return await this.getGeneric(`${apiPrefix}/me`);

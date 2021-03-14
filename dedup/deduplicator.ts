@@ -105,7 +105,7 @@ export class PlaylistDeduplicator extends BaseDeduplicator {
             });
           });
           for (let i = 0; i < tracks.length; i++) {
-            console.log('deduplicator.ts:  getTracks got track ' + tracks[i].name)
+            // console.log('deduplicator.ts:  getTracks got track ' + tracks[i].name)
           }
           resolve(tracks);
         })

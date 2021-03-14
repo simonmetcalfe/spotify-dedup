@@ -1,7 +1,7 @@
 import { SpotifyPlaylistType } from './spotifyApi';
 const SNAPSHOT_VERSION = 'v1';
 export default class PlaylistCache {
-  needsCheckForDuplicates(playlist: SpotifyPlaylistType) {
+  needsTracksDownloading(playlist: SpotifyPlaylistType) {
     console.log('playlistCache.ts:  needsCheckForDuplicates is called for playlist ' + playlist.name)
     if ('snapshot_id' in playlist) {
       try {
