@@ -37,6 +37,7 @@ const Status = ({ toProcess }) => {
 
 type StateType = {
   toProcess?: number;
+  toDownload?: number;
   playlists: Array<PlaylistModel>;
   savedTracks: {
     status?: string;
@@ -54,6 +55,7 @@ export default class Main extends React.Component<{
 }> {
   state: StateType = {
     toProcess: null,
+    toDownload: null,
     playlists: [],
     savedTracks: {
       status: null,

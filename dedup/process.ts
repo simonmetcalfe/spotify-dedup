@@ -10,13 +10,15 @@ import SpotifyWebApi, {
 
 const playlistCache = new PlaylistCache();
 
-const playlistToPlaylistModel = (
+const playlistToPlaylistModel = ( // Mapping for currentState.playlists and playlistsToCheck - needs investigation
   playlist: SpotifyPlaylistType
 ): PlaylistModel => ({
   playlist: playlist,
   duplicates: [],
+  tracks: [], // Not sure if this is correct, should be an array of SpotifytrackType
   status: '',
   processed: false,
+  downloaded: false, // Added because we are handling downloading separately
 });
 
 export default class {
@@ -38,20 +40,58 @@ export default class {
   // The main function that reads and indentifies duplicates
   process = async (api: SpotifyWebApi, user: SpotifyUserType) => {
     console.log('process.ts:  process async running')
+    // const is used to fix the model of currentState, but each object inside is modifyable
     const currentState: {
       playlists?: Array<PlaylistModel>;
       savedTracks?: {
         duplicates?: Array<any>;
       };
       toProcess?: number;
+      toDownload?: number;
     } = {};
 
-    // This method should still be fine, but we will want to call it for all playlists at the end
     const dispatch = this.dispatch.bind(this);
+
+    function onPlaylistDownloaded(playlist: PlaylistModel) {
+      console.log('process.ts:  onPlaylistDownloaded running for ' + playlist.playlist.name) // Model is just SportifyPlaylistType and duplicates array
+      console.log('process.ts:  onPlaylistDownloaded remaing playlists is ' + currentState.toDownload) // Model is just SportifyPlaylistType and duplicates array
+      // console.log('process.ts:  Local storage is currently ' + JSON.stringify(localStorage))
+      playlist.downloaded = true;
+      var remaining = currentState.toDownload - 1;
+      currentState.toDownload -= 1;
+      if (remaining === 0) {
+        if (global['ga']) {
+          global['ga']('send', 'event', 'spotify-dedup', 'library-processed');
+        }
+        if (global['fbq']) {
+          global['fbq']('trackCustom', 'dedup-library-processed');
+        }
+        processAllPlaylists();// Run the processing
+      }
+      dispatch('updateState', currentState);
+    }
+
+    function processAllPlaylists() {
+      console.log('process.ts:  processAllPlaylists running')
+      for (const playlistModel of currentState.playlists) {
+        onPlaylistProcessed(playlistModel);
+
+        // Old routine, temp here just for checking if the old dupe checking still works now it all happens at the end
+        console.log('process.ts:  process func about to find duplicate tracks  ' + playlistModel.playlist.name)
+        playlistModel.duplicates = PlaylistDeduplicator.findDuplicatedTracks(playlistModel.tracks);
+        if (playlistModel.duplicates.length === 0) {
+          playlistCache.storePlaylistWithoutDuplicates(
+            playlistModel.playlist
+          );
+        }
+
+      }
+    }
+
+
     function onPlaylistProcessed(playlist: PlaylistModel) {
       console.log('process.ts:  onPlaylistProcessed running for ' + playlist.playlist.name) // Model is just SportifyPlaylistType and duplicates array
       console.log('process.ts:  onPlaylistProcessed remaing playlists is ' + currentState.toProcess) // Model is just SportifyPlaylistType and duplicates array
-      // console.log('process.ts:  Local storage is currently ' + JSON.stringify(localStorage))
       playlist.processed = true;
       var remaining = currentState.toProcess - 1;
       currentState.toProcess -= 1;
@@ -89,8 +129,9 @@ export default class {
       currentState.playlists = playlistsToCheck.map((p) =>
         playlistToPlaylistModel(p)
       );
-      currentState.toProcess =
-        currentState.playlists.length + 1 /* saved tracks */;
+      console.log('process.ts:  currentState.toProcess is being updated to ' + currentState.playlists.length)
+      currentState.toProcess = currentState.playlists.length // Removed because don't care about saved tracks + 1 /* saved tracks */;
+      currentState.toDownload = currentState.playlists.length // Separate counter for downloading
       currentState.savedTracks = {};
 
       // TODO:  Remove this if we decide we don't want to get and process saved tracks
@@ -104,8 +145,8 @@ export default class {
       currentState.savedTracks.duplicates = SavedTracksDeduplicator.findDuplicatedTracks(
         savedTracks
       );
-
-
+      
+    
       if (currentState.savedTracks.duplicates.length && global['ga']) {
         global['ga'](
           'send',
@@ -116,17 +157,22 @@ export default class {
       }
       */
 
-      currentState.toProcess--;
+      currentState.toDownload--;
 
       this.dispatch('updateState', currentState);
 
       for (const playlistModel of currentState.playlists) {
         if (playlistCache.needsTracksDownloading(playlistModel.playlist)) {
           try {
+            console.log('process.ts:  process func Downloading tracks for playlist ' + playlistModel.playlist.name)
             const playlistTracks = await PlaylistDeduplicator.getTracks(
               api,
               playlistModel.playlist
             );
+
+            playlistModel.tracks = playlistTracks;
+            /*
+            console.log('process.ts:  process func about to find duplicate tracks  ' + playlistModel.playlist.name)
             playlistModel.duplicates = PlaylistDeduplicator.findDuplicatedTracks(
               playlistTracks
             );
@@ -135,17 +181,19 @@ export default class {
                 playlistModel.playlist
               );
             }
-            onPlaylistProcessed(playlistModel);
+            */
+            onPlaylistDownloaded(playlistModel);
+
           } catch (e) {
             console.error(
               'There was an error fetching tracks for playlist',
               playlistModel.playlist,
               e
             );
-            onPlaylistProcessed(playlistModel);
+            onPlaylistDownloaded(playlistModel);
           }
         } else {
-          onPlaylistProcessed(playlistModel);
+          onPlaylistDownloaded(playlistModel);
         }
       }
     }

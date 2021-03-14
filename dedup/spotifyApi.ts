@@ -113,8 +113,8 @@ export default class SpotifyWebApi {
 
   async getMe() {
     // console.log('spotifyApi.ts:  Initial storage (getMe) is currently ' + JSON.stringify(localStorage))
-    console.log('spotifyApi.ts:  Adding test item to local storage:  simonkey:simonvalue')
-    localStorage.setItem('simonkey', 'simovalue');
+    // console.log('spotifyApi.ts:  Adding test item to local storage:  simonkey:simonvalue')
+    // localStorage.setItem('simonkey', 'simovalue');
     return await this.getGeneric(`${apiPrefix}/me`);
   }
 
@@ -137,7 +137,7 @@ export default class SpotifyWebApi {
           },
         },
       });
-      console.log('spotifyApi.ts:  getGeneric returning with response ' + JSON.stringify(res))
+      //console.log('spotifyApi.ts:  getGeneric returning with response ' + JSON.stringify(res))
       return parseAPIResponse(res);
     } catch (e) {
       console.error('e', e);

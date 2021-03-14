@@ -30,7 +30,7 @@ class BaseDeduplicator {
     for (let i = 0; i < tracks.length; i++) {
       tracklist += tracks[i].name + ', '
     }
-    console.log('deduplicator.ts:  findDuplicatedTracks array before reduce is ' + tracklist)
+    //console.log('deduplicator.ts:  findDuplicatedTracks array before reduce is ' + tracklist)
     const result = tracks.reduce((duplicates, track, index) => {
       if (track === null) return duplicates;
       if (track.id === null) return duplicates;
