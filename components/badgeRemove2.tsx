@@ -1,9 +1,18 @@
 import React from 'react';
 
-export const BadgeRemove2 = (props: { playlistName, onClick: () => void }) => {
+export const BadgeRemove2 = (props: { playlistName, reason, onClick: () => void }) => {
     return (
         <span>
             <div onClick={props.onClick} >{props.playlistName}</div>
+
+            {/* TODO:  Need to change the colour using the value of REASON, something like the below
+            {reason === 'same-id' && (
+                <Badge>{t('result.duplicate.reason-same-id')}</Badge>
+            )}
+            {reason === 'same-name-artist' && (
+                 <Badge>{t('result.duplicate.reason-same-data')}</Badge>
+            )}
+            */}
             <style jsx>
                 {`
           

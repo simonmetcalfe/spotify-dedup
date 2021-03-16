@@ -22,6 +22,7 @@ export type PlaylistModel = {
 // New model for storing a list of the playlists that the track can be found it
 // We save the reason, whether it is 'same-id' or 'same-name-artist'
 export type InPlaylistsModel = {
+  index: number;
   reason: string;
   playlist: SpotifyPlaylistType
 }

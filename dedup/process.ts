@@ -57,8 +57,7 @@ export default class {
     const dispatch = this.dispatch.bind(this);
 
     function onPlaylistDownloaded(playlist: PlaylistModel) {
-      console.log('process.ts:  onPlaylistDownloaded running for ' + playlist.playlist.name) // Model is just SportifyPlaylistType and duplicates array
-      console.log('process.ts:  onPlaylistDownloaded remaing playlists is ' + currentState.toDownload) // Model is just SportifyPlaylistType and duplicates array
+      console.log('process.ts:  onPlaylistDownloaded running for ' + playlist.playlist.name + ' with currentState.toDownload at ' + currentState.toDownload) // Model is just SportifyPlaylistType and duplicates array
       // console.log('process.ts:  Local storage is currently ' + JSON.stringify(localStorage))
       playlist.downloaded = true;
       var remaining = currentState.toDownload - 1;
@@ -104,8 +103,7 @@ export default class {
 
 
     function onPlaylistProcessed(playlist: PlaylistModel) {
-      console.log('process.ts:  onPlaylistProcessed running for ' + playlist.playlist.name) // Model is just SportifyPlaylistType and duplicates array
-      console.log('process.ts:  onPlaylistProcessed remaing playlists is ' + currentState.toProcess) // Model is just SportifyPlaylistType and duplicates array
+      console.log('process.ts:  onPlaylistProcessed running for ' + playlist.playlist.name + ' with currentState.toProcess at ' + currentState.toProcess) // Model is just SportifyPlaylistType and duplicates array
       playlist.processed = true;
       var remaining = currentState.toProcess - 1;
       currentState.toProcess -= 1;
@@ -121,7 +119,6 @@ export default class {
     }
 
     let playlistsToCheck = [];
-    let playlistsLibrary = []; // A copy of playlistsToCheck so that we iterate through all playlists
     const ownedPlaylists: Array<SpotifyPlaylistType> = await fetchUserOwnedPlaylists(
       api,
       user.id
@@ -139,13 +136,12 @@ export default class {
 
     if (ownedPlaylists) {
       playlistsToCheck = ownedPlaylists;
-      playlistsLibrary = ownedPlaylists;
       currentState.playlists = playlistsToCheck.map((p) => // Create a new array with the result of the playlistToPlaylistModel
         playlistToPlaylistModel(p)                         // 
       );
-      console.log('process.ts:  currentState.toProcess is being updated to ' + currentState.playlists.length)
-      currentState.toProcess = currentState.playlists.length // Removed because don't care about saved tracks + 1 /* saved tracks */;
-      currentState.toDownload = currentState.playlists.length // Separate counter for downloading
+      console.log('process.ts:  currentState.toProcess and currentState.toDownload set to ' + currentState.playlists.length)
+      currentState.toProcess = currentState.playlists.length // WARNING add + 1 again if enabling saved tracks 
+      currentState.toDownload = currentState.playlists.length // WARNING add + 1 again if enabling saved tracks 
       currentState.savedTracks = {};
 
       // TODO:  Remove this if we decide we don't want to get and process saved tracks
@@ -169,9 +165,12 @@ export default class {
           'saved-tracks-found-duplicates'
         );
       }
+
+      currentState.toDownload--;  // WARNING Only needed if we are including saved tracks in the count, and if enabling MUST add + 1 to value above
+
       */
 
-      currentState.toDownload--;
+
 
       this.dispatch('updateState', currentState);
 

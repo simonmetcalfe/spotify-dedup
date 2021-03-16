@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation, Translation } from 'react-i18next';
-import { PlaylistModel } from '../dedup/types';
+import { PlaylistModel, InPlaylistsModel } from '../dedup/types';
 import { SpotifyUserType, SpotifyTrackType } from '../dedup/spotifyApi';
 
 import Process from '../dedup/process';
@@ -82,8 +82,8 @@ export default class Main extends React.Component<{
     //this.getState
   }
 
-  removeFromCurrentPlaylist = (playlist, id) => {
-    console.log('main.tsx:  removeFromCurrentPlaylist removing ' + id + ' from ' + playlist)
+  removeFromPlaylist = (playlistName, playlistId, trackName, trackId) => {
+    console.log('main.tsx:  removeFromPlaylist removing ' + trackName + ' (' + trackId + ') from ' + playlistName + ' (' + playlistId + ')')
   }
 
   playTrack = (id) => {
@@ -288,14 +288,23 @@ export default class Main extends React.Component<{
                             />
                             <DuplicateTrackListItem
                               key={index}
-                              reason={duplicate.reason}
                               trackName={duplicate.track.name}
                               trackArtistName={duplicate.track.artists[0].name}
                             />
                             <BadgeRemove2
                               playlistName={playlist.playlist.name}
-                              onClick={() => this.removeFromCurrentPlaylist(playlist.playlist.name, duplicate.track.name)}
+                              reason=''
+                              onClick={() => this.removeFromPlaylist(playlist.playlist.name, playlist.playlist.id, duplicate.track.name, duplicate.track.id)}
                             />
+                            {duplicate.inPlaylists.map((inPlaylist, index) => (
+                              <span>
+                                <BadgeRemove2
+                                  playlistName={inPlaylist.playlist.name}
+                                  reason={inPlaylist.reason}
+                                  onClick={() => this.removeFromPlaylist(inPlaylist.playlist.name, inPlaylist.playlist.id, duplicate.track.name, duplicate.track.id)}
+                                />
+                              </span>
+                            ))}
                           </span>
                         ))}
                       </DuplicateTrackList>

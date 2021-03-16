@@ -22,10 +22,10 @@ class BaseDeduplicator {
       if (track.id === null) return duplicates;
       let foundInPlaylists: Array<InPlaylistsModel> = []; // Build an array of all places the track is seen, as we iterate through all the user's playlists
       const seenNameAndArtistKey = `${track.name}:${track.artists[0].name}`.toLowerCase();
-      playlists.forEach(function (playlistModel) {
+      playlists.forEach(function (playlistModel, playlistIndex) {
         if (playlist.playlist.name != playlistModel.playlist.name) { // Don't compare playlsit with itself
           //console.log('deduplicator.ts:  Comparing ' + playlist.playlist.name + ' with ' + playlistModel.playlist.name);
-          playlistModel.tracks.forEach(function (spotifyTrackType) {
+          playlistModel.tracks.forEach(function (spotifyTrackType, trackIndex) {
             let isDuplicate = '';
             //console.log('Comparing playlist ' + playlistItem.playlist.name + ' and track ' + trackItem.name)
             if (track.id === spotifyTrackType.id) {
@@ -39,6 +39,7 @@ class BaseDeduplicator {
             }
             if (isDuplicate != '') {
               foundInPlaylists.push({
+                index: playlistIndex + trackIndex, // Crude way of making a unique index number, think its needed for React though
                 reason: isDuplicate,
                 playlist: playlistModel.playlist
               })
@@ -56,7 +57,7 @@ class BaseDeduplicator {
           inPlaylists: foundInPlaylists
         })
       } else {
-        console.log('deduplicator.ts:  NO duplicates found for ' + track.name)
+        //console.log('deduplicator.ts:  NO duplicates found for ' + track.name)
       }
 
       return duplicates;
