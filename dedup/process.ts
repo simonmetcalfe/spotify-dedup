@@ -10,11 +10,15 @@ import SpotifyWebApi, {
 
 const playlistCache = new PlaylistCache();
 
-const playlistToPlaylistModel = ( // Mapping for currentState.playlists and playlistsToCheck - needs investigation
+
+// Converts the SpotifyPlaylistType array (returned by fetchUserOwnedPlaylists) to a PlaylistModel array
+// Used to populate currentState.playlists (an array of PlaylistModel) with an entry for each playlist in Spotify (stored in playlistsToCheck - an array of SportifyPlaylistType) 
+// All the properties of PlaylistModel are blank/false, except for the playlist itself.  The other properties are added when each PlaylistModel element is processed 
+const playlistToPlaylistModel = (
   playlist: SpotifyPlaylistType
 ): PlaylistModel => ({
   playlist: playlist,
-  duplicates: [],
+  duplicates: [], // Does it matter that duplicates in this model coverter does not follow the new design of PlaylistModel (which now has an array within an array)?
   tracks: [], // Not sure if this is correct, should be an array of SpotifytrackType
   status: '',
   processed: false,
@@ -66,7 +70,7 @@ export default class {
         if (global['fbq']) {
           global['fbq']('trackCustom', 'dedup-library-processed');
         }
-        processAllPlaylists();// Run the processing
+        processAllPlaylists(); // Run the processing ONLY if all playlists are downloaded
       }
       dispatch('updateState', currentState);
     }
@@ -82,10 +86,9 @@ export default class {
         console.log('process.ts:  process func about to find duplicate tracks  ' + playlistModel.playlist.name)
         playlistModel.duplicates = PlaylistDeduplicator.findDuplicatedTracksInAllPlaylists(playlistModel, currentState.playlists);
 
+        console.log('process.ts:  Contents of playlistModel.duplicates for ' + playlistModel.playlist.name + ' is ' + JSON.stringify(playlistModel.duplicates))
+
         onPlaylistProcessed(playlistModel);
-
-
-
 
         // Do not see the value in storing playlists that don't contain any duplicates - appears to work without it
         /*
@@ -137,8 +140,8 @@ export default class {
     if (ownedPlaylists) {
       playlistsToCheck = ownedPlaylists;
       playlistsLibrary = ownedPlaylists;
-      currentState.playlists = playlistsToCheck.map((p) =>
-        playlistToPlaylistModel(p)
+      currentState.playlists = playlistsToCheck.map((p) => // Create a new array with the result of the playlistToPlaylistModel
+        playlistToPlaylistModel(p)                         // 
       );
       console.log('process.ts:  currentState.toProcess is being updated to ' + currentState.playlists.length)
       currentState.toProcess = currentState.playlists.length // Removed because don't care about saved tracks + 1 /* saved tracks */;
@@ -182,6 +185,8 @@ export default class {
             );
 
             playlistModel.tracks = playlistTracks;
+
+            // The old code to find duplicate tracks, we have now moved this to processAllPlaylists() so that the de-dupe only runs after all playlists are downloaded
             /*
             console.log('process.ts:  process func about to find duplicate tracks  ' + playlistModel.playlist.name)
             playlistModel.duplicates = PlaylistDeduplicator.findDuplicatedTracks(

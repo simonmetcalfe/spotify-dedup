@@ -11,13 +11,17 @@ export type PlaylistModel = {
     index: number;
     //reason: string;  // An reason is required for each occurance in another playlist, hence reason is moved to the Playlists array
     track: SpotifyTrackType;
-    inPlaylists: Array<{
-      reason: string;
-      playlist: SpotifyPlaylistType
-    }>;
+    inPlaylists: Array<InPlaylistsModel>;
   }>;
-  tracks: SpotifyTrackType[]; // Additional array as we now need to store the unprocessed tracks inside so they can be processed later on
+  tracks: Array<SpotifyTrackType>; // Additional array as we now need to store the unprocessed tracks inside so they can be processed later on
   status: string;
   processed: boolean;
   downloaded: boolean; // New status because we are downloading and processing separately
 };
+
+// New model for storing a list of the playlists that the track can be found it
+// We save the reason, whether it is 'same-id' or 'same-name-artist'
+export type InPlaylistsModel = {
+  reason: string;
+  playlist: SpotifyPlaylistType
+}

@@ -173,7 +173,7 @@ export default class Main extends React.Component<{
   }
 
   render() {
-    const totalDuplicates = //totalDuplicats will either be 0 or the reduce function
+    const totalDuplicates = //totalDuplicats will either be 0 or the result of the reduce function
       this.state.playlists.length === 0
         ? 0
         : this.state.playlists.reduce( // .reduce(initialValue,currentValue), adds the number of duplicates up for each playlist in the array

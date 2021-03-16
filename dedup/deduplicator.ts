@@ -5,7 +5,7 @@ import SpotifyWebApi, {
   SpotifyPlaylistTrackType,
   SpotifySavedTrackType,
 } from './spotifyApi';
-import { PlaylistModel } from './types';
+import { PlaylistModel, InPlaylistsModel } from './types';
 
 class BaseDeduplicator {
   async removeDuplicates(model) {
@@ -20,37 +20,48 @@ class BaseDeduplicator {
     const result = playlist.tracks.reduce((duplicates, track, index) => {
       if (track === null) return duplicates;
       if (track.id === null) return duplicates;
-      let isDuplicate = '';
+      let foundInPlaylists: Array<InPlaylistsModel> = []; // Build an array of all places the track is seen, as we iterate through all the user's playlists
       const seenNameAndArtistKey = `${track.name}:${track.artists[0].name}`.toLowerCase();
-      playlists.forEach(function (playlistItem) {
-        console.log('deduplicator.ts:  Comparing ' + playlist.playlist.name + ' with ' + playlistItem.playlist);
-        playlistItem.tracks.forEach(function (trackItem) {
-          //console.log('Comparing playlist ' + playlistItem.playlist.name + ' and track ' + trackItem.name)
-          if (playlist.playlist.name != playlistItem.playlist.name) { // Don't compare playlsit with itself
-            if (track.id === trackItem.id) {
-              console.log('Dupe of ' + trackItem.name + ' found in ' + playlistItem.playlist.name)
+      playlists.forEach(function (playlistModel) {
+        if (playlist.playlist.name != playlistModel.playlist.name) { // Don't compare playlsit with itself
+          //console.log('deduplicator.ts:  Comparing ' + playlist.playlist.name + ' with ' + playlistModel.playlist.name);
+          playlistModel.tracks.forEach(function (spotifyTrackType) {
+            let isDuplicate = '';
+            //console.log('Comparing playlist ' + playlistItem.playlist.name + ' and track ' + trackItem.name)
+            if (track.id === spotifyTrackType.id) {
+              console.log('Dupe of ' + spotifyTrackType.name + ' found in ' + playlistModel.playlist.name)
               isDuplicate = 'same-id';
             }
-            else if (seenNameAndArtistKey === `${trackItem.name}:${trackItem.artists[0].name}`.toLowerCase()
-              && Math.abs(track.duration_ms - trackItem.duration_ms) < 2000) {
-              console.log('Similar dupe of ' + trackItem.name + ' found in ' + playlistItem.playlist.name)
+            else if (seenNameAndArtistKey === `${spotifyTrackType.name}:${spotifyTrackType.artists[0].name}`.toLowerCase()
+              && Math.abs(track.duration_ms - spotifyTrackType.duration_ms) < 2000) {
+              console.log('Similar dupe of ' + spotifyTrackType.name + ' found in ' + playlistModel.playlist.name)
               isDuplicate = 'same-name-artist';
             }
             if (isDuplicate != '') {
-              duplicates.push({
-                index: index,
-                track: track,
-                inPlaylists: {
-                  reason: isDuplicate,
-                  playlist: playlistItem
-                }
+              foundInPlaylists.push({
+                reason: isDuplicate,
+                playlist: playlistModel.playlist
               })
             }
-          }
-        });
+          });
+        }
       });
+
+      // Finally after iterating through all playlists, if track was found in 1 or more playlists (foundInPlaylists[] is not empty), add the duplicate
+      if (foundInPlaylists.length > 0) {
+        console.log('deduplicator.ts:  Duplicates found for ' + track.name + ' and the foundInPlaylists array size is ' + foundInPlaylists.length)
+        duplicates.push({
+          index: index,
+          track: track,
+          inPlaylists: foundInPlaylists
+        })
+      } else {
+        console.log('deduplicator.ts:  NO duplicates found for ' + track.name)
+      }
+
       return duplicates;
     }, []);
+    return result;
   }
 
   static findDuplicatedTracks(tracks: Array<SpotifyTrackType>) {
