@@ -63,50 +63,10 @@ export default class {
       // var remaining = currentState.toDownload - 1;  //TODO:  Remove this line, and then just use currentState.toDownload in the below IF statement?
       currentState.toDownload -= 1;
       if (currentState.toDownload === 0) { // TODO:  Why do we evaluate remaining before we subtract 1?  Is this why the UI always displays 1 remaining playlsit to go
-
-        // Only used for FB and GA tracking?
-        /*
-        if (global['ga']) {
-          global['ga']('send', 'event', 'spotify-dedup', 'library-processed');
-        }
-        if (global['fbq']) {
-          global['fbq']('trackCustom', 'dedup-library-processed');
-        }
-        */
         console.log('process.ts:  currentState.toDownload reached 0!')
-        dispatch('updateState', currentState);
-        processAllPlaylists(); // Run the processing ONLY if all playlists are downloaded
       }
       dispatch('updateState', currentState);
     }
-
-    function processAllPlaylists() {
-      console.log('process.ts:  processAllPlaylists running')
-      for (const playlistModel of currentState.playlists) {
-
-        // Old dedup routine, here for testing
-        //playlistModel.duplicates = PlaylistDeduplicator.findDuplicatedTracks(playlistModel.tracks);
-
-        // New dedup routine
-        console.log('process.ts:  process func about to find duplicate tracks  ' + playlistModel.playlist.name)
-        playlistModel.duplicates = PlaylistDeduplicator.findDuplicatedTracksInAllPlaylists(playlistModel, currentState.playlists);
-
-        console.log('process.ts:  Contents of playlistModel.duplicates for ' + playlistModel.playlist.name + ' is ' + JSON.stringify(playlistModel.duplicates))
-
-        onPlaylistProcessed(playlistModel);
-
-        // Do not see the value in storing playlists that don't contain any duplicates - appears to work without it
-        /*
-        if (playlistModel.duplicates.length === 0) {
-          console.log('process.ts:  Storing playlist without duplicates for playlist ' + playlistModel.playlist.name)
-          playlistCache.storePlaylistWithoutDuplicates(
-            playlistModel.playlist
-          );
-        }
-        */
-      }
-    }
-
 
     function onPlaylistProcessed(playlist: PlaylistModel) {
       console.log('process.ts:  onPlaylistProcessed running for ' + playlist.playlist.name + ' with currentState.toProcess at ' + currentState.toProcess) // Model is just SportifyPlaylistType and duplicates array
@@ -114,19 +74,6 @@ export default class {
       playlist.processed = true;
       //var remaining = currentState.toProcess - 1; //TODO:  Remove this line, and then just use currentState.toProcess in the below IF statement?
       currentState.toProcess -= 1;
-      if (currentState.toProcess === 0) { // TODO:  Why do we evaluate remaining before we subtract 1?  Is this why the UI always displays 1 remaining playlsit to go
-
-        // Only used for FB and GA tracking?
-        /*
-        if (global['ga']) {
-          global['ga']('send', 'event', 'spotify-dedup', 'library-processed');
-        }
-        if (global['fbq']) {
-          global['fbq']('trackCustom', 'dedup-library-processed');
-        }
-        */
-
-      }
       dispatch('updateState', currentState);
     }
 
@@ -179,15 +126,16 @@ export default class {
           'saved-tracks-found-duplicates'
         );
       }
-
+ 
       currentState.toDownload--;  // WARNING Only needed if we are including saved tracks in the count, and if enabling MUST add + 1 to value above
-
+ 
       */
 
 
       console.log('process.ts:  this.dispatch is running, with currentState.toDownload at ' + currentState.toDownload + ' and with currentState.toProcess at ' + currentState.toProcess);
       this.dispatch('updateState', currentState);
 
+      // Download tracks for each playlist
       for (const playlistModel of currentState.playlists) {
         if (playlistCache.needsTracksDownloading(playlistModel.playlist)) {
           try {
@@ -225,6 +173,33 @@ export default class {
           onPlaylistDownloaded(playlistModel);
         }
       }
+
+      // Process tracks for each playlist
+      for (const playlistModel of currentState.playlists) {
+
+        // Old dedup routine, here for testing
+        //playlistModel.duplicates = PlaylistDeduplicator.findDuplicatedTracks(playlistModel.tracks);
+
+        // New dedup routine
+        console.log('process.ts:  process func about to find duplicate tracks  ' + playlistModel.playlist.name)
+        playlistModel.duplicates = PlaylistDeduplicator.findDuplicatedTracksInAllPlaylists(playlistModel, currentState.playlists);
+
+        console.log('process.ts:  Contents of playlistModel.duplicates for ' + playlistModel.playlist.name + ' is ' + JSON.stringify(playlistModel.duplicates))
+
+        onPlaylistProcessed(playlistModel);
+
+        // Do not see the value in storing playlists that don't contain any duplicates - appears to work without it
+        /*
+        if (playlistModel.duplicates.length === 0) {
+          console.log('process.ts:  Storing playlist without duplicates for playlist ' + playlistModel.playlist.name)
+          playlistCache.storePlaylistWithoutDuplicates(
+            playlistModel.playlist
+          );
+        }
+        */
+      }
+
+
     }
   };
 }
