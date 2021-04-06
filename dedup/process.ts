@@ -60,15 +60,21 @@ export default class {
       console.log('process.ts:  onPlaylistDownloaded running for ' + playlist.playlist.name + ' with currentState.toDownload at ' + currentState.toDownload) // Model is just SportifyPlaylistType and duplicates array
       // console.log('process.ts:  Local storage is currently ' + JSON.stringify(localStorage))
       playlist.downloaded = true;
-      var remaining = currentState.toDownload - 1;
+      // var remaining = currentState.toDownload - 1;  //TODO:  Remove this line, and then just use currentState.toDownload in the below IF statement?
       currentState.toDownload -= 1;
-      if (remaining === 0) {
+      if (currentState.toDownload === 0) { // TODO:  Why do we evaluate remaining before we subtract 1?  Is this why the UI always displays 1 remaining playlsit to go
+
+        // Only used for FB and GA tracking?
+        /*
         if (global['ga']) {
           global['ga']('send', 'event', 'spotify-dedup', 'library-processed');
         }
         if (global['fbq']) {
           global['fbq']('trackCustom', 'dedup-library-processed');
         }
+        */
+        console.log('process.ts:  currentState.toDownload reached 0!')
+        dispatch('updateState', currentState);
         processAllPlaylists(); // Run the processing ONLY if all playlists are downloaded
       }
       dispatch('updateState', currentState);
@@ -104,16 +110,22 @@ export default class {
 
     function onPlaylistProcessed(playlist: PlaylistModel) {
       console.log('process.ts:  onPlaylistProcessed running for ' + playlist.playlist.name + ' with currentState.toProcess at ' + currentState.toProcess) // Model is just SportifyPlaylistType and duplicates array
+      console.log('process.ts:  currentState.toDownload is STILL at ' + currentState.toDownload)
       playlist.processed = true;
-      var remaining = currentState.toProcess - 1;
+      //var remaining = currentState.toProcess - 1; //TODO:  Remove this line, and then just use currentState.toProcess in the below IF statement?
       currentState.toProcess -= 1;
-      if (remaining === 0) {
+      if (currentState.toProcess === 0) { // TODO:  Why do we evaluate remaining before we subtract 1?  Is this why the UI always displays 1 remaining playlsit to go
+
+        // Only used for FB and GA tracking?
+        /*
         if (global['ga']) {
           global['ga']('send', 'event', 'spotify-dedup', 'library-processed');
         }
         if (global['fbq']) {
           global['fbq']('trackCustom', 'dedup-library-processed');
         }
+        */
+
       }
       dispatch('updateState', currentState);
     }
@@ -123,7 +135,8 @@ export default class {
       api,
       user.id
     ).catch((e) => {
-      if (global['ga']) {
+      // GA code not used
+      /*if (global['ga']) {
         global['ga'](
           'send',
           'event',
@@ -131,6 +144,7 @@ export default class {
           'error-fetching-user-playlists'
         );
       }
+      */
       console.error("There was an error fetching user's playlists", e);
     });
 
@@ -140,8 +154,8 @@ export default class {
         playlistToPlaylistModel(p)                         // 
       );
       console.log('process.ts:  currentState.toProcess and currentState.toDownload set to ' + currentState.playlists.length)
-      currentState.toProcess = currentState.playlists.length // WARNING add + 1 again if enabling saved tracks 
       currentState.toDownload = currentState.playlists.length // WARNING add + 1 again if enabling saved tracks 
+      currentState.toProcess = currentState.playlists.length // WARNING add + 1 again if enabling saved tracks 
       currentState.savedTracks = {};
 
       // TODO:  Remove this if we decide we don't want to get and process saved tracks
@@ -171,7 +185,7 @@ export default class {
       */
 
 
-
+      console.log('process.ts:  this.dispatch is running, with currentState.toDownload at ' + currentState.toDownload + ' and with currentState.toProcess at ' + currentState.toProcess);
       this.dispatch('updateState', currentState);
 
       for (const playlistModel of currentState.playlists) {

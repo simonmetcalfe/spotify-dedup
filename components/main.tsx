@@ -15,14 +15,16 @@ import { BadgeRemove2 } from './badgeRemove2';
 import { BadgePlay } from './badgePlay';
 
 // If toProcess is greater than 0 or null, then the text 'Finding duplicates in your playlists' is shown
+// This probably does not need updating becuase toProcess will always be > 0 if toDownload is > 0
 const Status = ({ toProcess }) => {
   const { t } = useTranslation();
   return (
     <span>
       <h3>
         {toProcess > 0 || toProcess === null
-          ? t('process.status.finding')
-          : t('process.status.complete')}
+          ? 'FINDING!!!'  // TODO:  Investigate and resinstate translation function, and add downloading status  -  t('process.status.finding')
+          : 'COMPLETE!!!'  // TODO:  Investigate and resinstate translation function, and add downloading status  -  t('process.status.complete')
+        }
       </h3>
       <style jsx>
         {`
@@ -195,10 +197,20 @@ export default class Main extends React.Component<{
           {this.state.toProcess === null && (
             <Translation>{(t) => t('process.reading-library')}</Translation>
           )}
-          {this.state.toProcess > 0 && (
+          {this.state.toDownload > 0 && (
+            'Downloading ' + this.state.toDownload + ' playlist(s)...'
+            // TODO:  Reinstate translations here
+            // <Translation>{(t) => t('process.reading-library')}</Translation>
+          )}
+
+          {this.state.toDownload < 2 && this.state.toProcess > 0 && (
+            'All playlists downloaded.  Crunching ' + this.state.toProcess + ' playlist(s)...'
+            // TODO:  Reinstate translations here
+            /*
             <Translation>
               {(t) => t('process.processing', { count: this.state.toProcess })}
             </Translation>
+            */
           )}
           {this.state.toProcess === 0 && totalDuplicates > 0 && (
             <span>
