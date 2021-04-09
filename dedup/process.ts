@@ -10,6 +10,9 @@ import SpotifyWebApi, {
 
 const playlistCache = new PlaylistCache();
 
+const sleep = (milliseconds) => {
+  return new Promise(resolve => setTimeout(resolve, milliseconds))
+}
 
 // Converts the SpotifyPlaylistType array (returned by fetchUserOwnedPlaylists) to a PlaylistModel array
 // Used to populate currentState.playlists (an array of PlaylistModel) with an entry for each playlist in Spotify (stored in playlistsToCheck - an array of SportifyPlaylistType) 
@@ -68,13 +71,13 @@ export default class {
       dispatch('updateState', currentState);
     }
 
-    function onPlaylistProcessed(playlist: PlaylistModel) {
+    async function onPlaylistProcessed(playlist: PlaylistModel) {
       console.log('process.ts:  onPlaylistProcessed running for ' + playlist.playlist.name + ' with currentState.toProcess at ' + currentState.toProcess) // Model is just SportifyPlaylistType and duplicates array
       console.log('process.ts:  currentState.toDownload is STILL at ' + currentState.toDownload)
       playlist.processed = true;
       //var remaining = currentState.toProcess - 1; //TODO:  Remove this line, and then just use currentState.toProcess in the below IF statement?
       currentState.toProcess -= 1;
-      dispatch('updateState', currentState);
+      await sleep(1);
     }
 
     let playlistsToCheck = [];
@@ -182,11 +185,15 @@ export default class {
 
         // New dedup routine
         console.log('process.ts:  process func about to find duplicate tracks  ' + playlistModel.playlist.name)
-        playlistModel.duplicates = PlaylistDeduplicator.findDuplicatedTracksInAllPlaylists(playlistModel, currentState.playlists);
+        sleep(1).then(() => {
+          playlistModel.duplicates = PlaylistDeduplicator.findDuplicatedTracksInAllPlaylists(playlistModel, currentState.playlists);
+          onPlaylistProcessed(playlistModel);
+          dispatch('updateState', currentState);
+        })
+        //console.log('process.ts:  Contents of playlistModel.duplicates for ' + playlistModel.playlist.name + ' is ' + JSON.stringify(playlistModel.duplicates))
 
-        console.log('process.ts:  Contents of playlistModel.duplicates for ' + playlistModel.playlist.name + ' is ' + JSON.stringify(playlistModel.duplicates))
 
-        onPlaylistProcessed(playlistModel);
+
 
         // Do not see the value in storing playlists that don't contain any duplicates - appears to work without it
         /*

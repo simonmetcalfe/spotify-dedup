@@ -203,7 +203,7 @@ export default class Main extends React.Component<{
             // <Translation>{(t) => t('process.reading-library')}</Translation>
           )}
 
-          {this.state.toDownload < 2 && this.state.toProcess > 0 && (
+          {this.state.toDownload === 0 && this.state.toProcess > 0 && (
             'All playlists downloaded.  Crunching ' + this.state.toProcess + ' playlist(s)...'
             // TODO:  Reinstate translations here
             /*
@@ -248,7 +248,7 @@ export default class Main extends React.Component<{
 
         <ul className="playlists-list">
 
-          {this.state.playlists
+          {this.state.toProcess === 0 && this.state.playlists
             .filter((p) => p.duplicates.length || p.status != '')
             .map((playlist: PlaylistModel, index) => (
               <li className="playlists-list-item media" key={index}>
