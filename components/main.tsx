@@ -70,18 +70,11 @@ export default class Main extends React.Component<{
     const process = new Process();
     process.on('updateState', (state) => {
       this.setState(state);
-      console.log('main.tsx:  componentDidMount() has setState, contents now is ' + this.state)
+      //console.log('main.tsx:  componentDidMount() has setState, contents now is ' + this.state)
     });
     // Starts the process function inside of Process
     // Where does this.props come from?
     process.process(this.props.api, this.props.user);
-  }
-
-  printStore() {
-    console.log('main.tsx:  printStore() called')
-    //this.setState(state);
-    //console.log(state)
-    //this.getState
   }
 
   removeFromPlaylist = (playlistName, playlistId, trackName, trackId) => {
@@ -95,7 +88,6 @@ export default class Main extends React.Component<{
   removeDuplicates = (playlist: PlaylistModel) => {
     (async () => {
       console.log('main.tsx:  removeDuplicates is called for playlist ' + playlist.playlist.name)
-      console.log('this.state is ' + JSON.stringify(this.state))
       console.log('this.state.playlists is ' + JSON.stringify(this.state.playlists))
 
       const index = this.state.playlists.findIndex(
@@ -187,10 +179,6 @@ export default class Main extends React.Component<{
         <BadgeRemove2
           playlistName='Print state'
           onClick={() => console.log(this.state)}
-        />
-        <BadgeRemove2
-          playlistName='Print store'
-          onClick={() => this.printStore()}
         />
         <Status toProcess={this.state.toProcess} />
         <Panel>
