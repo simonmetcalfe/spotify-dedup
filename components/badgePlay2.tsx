@@ -1,15 +1,16 @@
 import React from 'react';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPlay } from "@fortawesome/free-solid-svg-icons";
 
-export const BadgePlay = (props: { onClick: () => void }) => {
+export const BadgePlay2 = (props: { onPlay: () => void }) => {
     return (
         <span>
-            <div onClick={props.onClick} >Play</div>
+            <div onClick={props.onPlay} ><FontAwesomeIcon icon={faPlay} /></div>
             <style jsx>
                 {`
           
           span {
-            color: #fff;
-            cursor: pointer;
+            color: #ffffff;
             background-color: #1db954;
             border-radius: 10px;
             display: inline-block;
@@ -23,6 +24,7 @@ export const BadgePlay = (props: { onClick: () => void }) => {
             text-align: center;
             vertical-align: baseline;
             white-space: nowrap;
+            cursor: pointer;
           }
         `}
             </style>

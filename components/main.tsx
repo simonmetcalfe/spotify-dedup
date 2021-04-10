@@ -6,13 +6,10 @@ import { SpotifyUserType, SpotifyTrackType } from '../dedup/spotifyApi';
 import Process from '../dedup/process';
 import { PlaylistDeduplicator, SavedTracksDeduplicator } from '../dedup/deduplicator';
 
-import Badge from './badge';
 import BuyMeACoffee from './bmc';
 import Panel from './panel';
 import { DuplicateTrackList } from './duplicateTrackList';
 import { DuplicateTrackListItem } from './duplicateTrackListItem';
-import { BadgeRemove2 } from './badgeRemove2';
-import { BadgePlay } from './badgePlay';
 
 // If toProcess is greater than 0 or null, then the text 'Finding duplicates in your playlists' is shown
 // This probably does not need updating becuase toProcess will always be > 0 if toDownload is > 0
@@ -282,29 +279,17 @@ export default class Main extends React.Component<{
                       </button>
                       <DuplicateTrackList>
                         {playlist.duplicates.map((duplicate, index) => (
-                          <span>
-                            <BadgePlay
-                              onClick={() => this.playTrack(duplicate.track.name)}
-                            />
+                          <span key={index}>
                             <DuplicateTrackListItem
                               key={index}
                               trackName={duplicate.track.name}
                               trackArtistName={duplicate.track.artists[0].name}
+                              thisPlaylistName={playlist.playlist.name}
+                              thisPlaylistId={playlist.playlist.id}
+                              inPlaylists={duplicate.inPlaylists}
+                              onPlay={() => this.playTrack(duplicate.track.name)}
+                              onRemove={(playlistName, playlistId) => this.removeFromPlaylist(playlistName, playlistId, duplicate.track.name, duplicate.track.id)}
                             />
-                            <BadgeRemove2
-                              playlistName={playlist.playlist.name}
-                              reason=''
-                              onClick={() => this.removeFromPlaylist(playlist.playlist.name, playlist.playlist.id, duplicate.track.name, duplicate.track.id)}
-                            />
-                            {duplicate.inPlaylists.map((inPlaylist, index) => (
-                              <span>
-                                <BadgeRemove2
-                                  playlistName={inPlaylist.playlist.name}
-                                  reason={inPlaylist.reason}
-                                  onClick={() => this.removeFromPlaylist(inPlaylist.playlist.name, inPlaylist.playlist.id, duplicate.track.name, duplicate.track.id)}
-                                />
-                              </span>
-                            ))}
                           </span>
                         ))}
                       </DuplicateTrackList>
