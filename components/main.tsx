@@ -10,9 +10,9 @@ import BuyMeACoffee from './bmc';
 import Panel from './panel';
 import { DuplicateTrackList } from './duplicateTrackList';
 import { DuplicateTrackListItem } from './duplicateTrackListItem';
+import { BadgeRemove3 } from './badgeRemove3';
 
-// If toProcess is greater than 0 or null, then the text 'Finding duplicates in your playlists' is shown
-// This probably does not need updating becuase toProcess will always be > 0 if toDownload is > 0
+
 const Status = ({ toProcess }) => {
   const { t } = useTranslation();
   return (
@@ -80,6 +80,7 @@ export default class Main extends React.Component<{
 
   playTrack = (id) => {
     console.log('main.tsx:  playTrack playing ' + id)
+    this.props.api.previewTrack(id);
   }
 
   removeDuplicates = (playlist: PlaylistModel) => {
@@ -116,14 +117,6 @@ export default class Main extends React.Component<{
           playlistsCopy[index].duplicates = []; // For the copy of all playlists, find the current playlist in the copy, and clear the duplicates
           playlistsCopy[index].status = 'process.items.removed'; // Status is 'Duplicates removed'
           this.setState({ ...this.state, playlists: [...playlistsCopy] }); // State is updated with the copy
-          if (global['ga']) {
-            global['ga'](
-              'send',
-              'event',
-              'spotify-dedup',
-              'playlist-removed-duplicates'
-            );
-          }
         } catch (e) {
           global['Raven'] &&
             global['Raven'].captureMessage(
@@ -173,9 +166,10 @@ export default class Main extends React.Component<{
         ) // Commented because not working with saved tracks + this.state.savedTracks.duplicates.length; // and adds the number of saved tracks duplicates to the number
     return (
       <div>
-        <BadgeRemove2
-          playlistName='Print state'
-          onClick={() => console.log(this.state)}
+        <BadgeRemove3
+          label='Print state'
+          reason=''
+          onRemove={() => console.log(this.state)}
         />
         <Status toProcess={this.state.toProcess} />
         <Panel>
@@ -287,7 +281,7 @@ export default class Main extends React.Component<{
                               thisPlaylistName={playlist.playlist.name}
                               thisPlaylistId={playlist.playlist.id}
                               inPlaylists={duplicate.inPlaylists}
-                              onPlay={() => this.playTrack(duplicate.track.name)}
+                              onPlay={() => this.playTrack(duplicate.track.id)}
                               onRemove={(playlistName, playlistId) => this.removeFromPlaylist(playlistName, playlistId, duplicate.track.name, duplicate.track.id)}
                             />
                           </span>

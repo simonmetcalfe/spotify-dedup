@@ -23,7 +23,7 @@ class BaseDeduplicator {
       let foundInPlaylists: Array<InPlaylistsModel> = []; // Build an array of all places the track is seen, as we iterate through all the user's playlists
       const seenNameAndArtistKey = `${track.name}:${track.artists[0].name}`.toLowerCase();
       playlists.forEach(function (playlistModel, playlistIndex) {
-        if (playlist.playlist.name != playlistModel.playlist.name) { // Don't compare playlsit with itself
+        if (playlist.playlist.name != playlistModel.playlist.name) { // Don't compare playlist with itself
           //console.log('deduplicator.ts:  Comparing ' + playlist.playlist.name + ' with ' + playlistModel.playlist.name);
           playlistModel.tracks.forEach(function (spotifyTrackType, trackIndex) {
             let isDuplicate = '';

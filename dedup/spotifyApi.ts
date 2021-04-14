@@ -154,6 +154,27 @@ export default class SpotifyWebApi {
     return await this.getGeneric(url, options);
   }
 
+  async previewTrack(trackId: string) {
+    console.log('spotifyApi.ts:  previewTrack called for track ' + trackId)
+
+    let body = `{
+                  "uris": ["spotify:track:${trackId}"],
+                  "position_ms": 30000
+                }`
+
+    const res = await fetch({
+      url: `${apiPrefix}/me/player/play`,
+      options: {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+        },
+        body: `${body}`
+      },
+    });
+    return parseAPIResponse(res);
+  }
+
   async removeTracksFromPlaylist(
     userId: string,
     playlistId: string,
