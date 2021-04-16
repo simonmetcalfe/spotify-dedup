@@ -16,17 +16,18 @@ class BaseDeduplicator {
     throw 'Not implemented';
   }
 
-  static findDuplicatedTracksInAllPlaylists(playlist: PlaylistModel, playlists: Array<PlaylistModel>) {
-    const result = playlist.tracks.reduce((duplicates, track, index) => {
+  static findDuplicatedTracksInAllPlaylists(currentPlaylist: PlaylistModel, allPlaylists: Array<PlaylistModel>) {
+    const result = currentPlaylist.tracks.reduce((duplicates, track, index) => {
       if (track === null) return duplicates;
       if (track.id === null) return duplicates;
       let foundInPlaylists: Array<InPlaylistsModel> = []; // Build an array of all places the track is seen, as we iterate through all the user's playlists
       const seenNameAndArtistKey = `${track.name}:${track.artists[0].name}`.toLowerCase();
-      playlists.forEach(function (playlistModel, playlistIndex) {
-        if (playlist.playlist.name != playlistModel.playlist.name) { // Don't compare playlist with itself
+      allPlaylists.forEach(function (playlistModel, playlistIndex) {
+        if (currentPlaylist.playlist.name != playlistModel.playlist.name) { // Don't compare playlist with itself
           //console.log('deduplicator.ts:  Comparing ' + playlist.playlist.name + ' with ' + playlistModel.playlist.name);
           playlistModel.tracks.forEach(function (spotifyTrackType, trackIndex) {
             let isDuplicate = '';
+            let similarTrack = null;
             //console.log('Comparing playlist ' + playlistItem.playlist.name + ' and track ' + trackItem.name)
             if (track.id === spotifyTrackType.id) {
               // console.log('Dupe of ' + spotifyTrackType.name + ' found in ' + playlistModel.playlist.name)
@@ -36,12 +37,15 @@ class BaseDeduplicator {
               && Math.abs(track.duration_ms - spotifyTrackType.duration_ms) < 2000) {
               // console.log('Similar dupe of ' + spotifyTrackType.name + ' found in ' + playlistModel.playlist.name)
               isDuplicate = 'same-name-artist';
+              similarTrack = spotifyTrackType; // Save similar track so we can find and delete it easily 
             }
             if (isDuplicate != '') {
               foundInPlaylists.push({
-                index: playlistIndex + trackIndex, // Crude way of making a unique index number, think its needed for React though
+                trackIndex: trackIndex, // The location of the duplicate track in the foreign playlist // won't be unique if the track is in the same position in 2 different playlists
+                playlistIndex: playlistIndex, // The location of the foreign playlist in the store
                 reason: isDuplicate,
-                playlist: playlistModel.playlist
+                playlist: playlistModel.playlist,
+                similarTrack: similarTrack
               })
             }
           });
@@ -65,6 +69,7 @@ class BaseDeduplicator {
     return result;
   }
 
+  //TODO:  This is not used, consider removing
   static findDuplicatedTracks(tracks: Array<SpotifyTrackType>) {
     var tracklist = '';
     for (let i = 0; i < tracks.length; i++) {
@@ -157,6 +162,36 @@ export class PlaylistDeduplicator extends BaseDeduplicator {
     });
   }
 
+  static async removeTrack(
+    api: SpotifyWebApi,
+    uri: string,
+    index: number,
+    playlistModel: PlaylistModel
+  ) {
+    return Promise.resolve().then(function () {
+      console.log('Deduplicator.ts:  Removing track from playlist')
+      if (playlistModel.playlist.id === 'starred') {
+        return Promise.reject('It is not possible to delete duplicates from your Starred playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.')
+      }
+      if (playlistModel.playlist.collaborative) {
+        return Promise.reject('It is not possible to delete duplicates from a collaborative playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.')
+      }
+      else {
+        let track = [uri];
+        return api.removeTracksFromPlaylist(
+          playlistModel.playlist.owner.id,
+          playlistModel.playlist.id,
+          track
+        )
+      }
+    }).then(function (result) {
+      // Do some processing if needed?
+      return Promise.resolve()
+    }).catch(function (e) {
+      return Promise.reject('deduplicator.ts:  Could not remove track from playlist!!')
+    })
+  }
+
   static async removeDuplicates(
     api: SpotifyWebApi,
     playlistModel: PlaylistModel
@@ -181,7 +216,7 @@ export class PlaylistDeduplicator extends BaseDeduplicator {
           .reverse(); // reverse so we delete the last ones first
         const promises = [];
         do {
-          const chunk = tracksToRemove.splice(0, 100);
+          const chunk = tracksToRemove.splice(0, 100); // Moves the first n items from tracksToRemove to the variable 'chunk'
           (function (playlistModel, chunk, api) {
             promises.push(() =>
               api.removeTracksFromPlaylist(

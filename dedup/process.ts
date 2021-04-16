@@ -19,8 +19,10 @@ const sleep = (milliseconds) => {
 // Used to populate currentState.playlists (an array of PlaylistModel) with an entry for each playlist in Spotify (stored in playlistsToCheck - an array of SportifyPlaylistType) 
 // All the properties of PlaylistModel are blank/false, except for the playlist itself.  The other properties are added when each PlaylistModel element is processed 
 const playlistToPlaylistModel = (
-  playlist: SpotifyPlaylistType
+  playlist: SpotifyPlaylistType,
+  index: number
 ): PlaylistModel => ({
+  index: index,
   playlist: playlist,
   duplicates: [],
   tracks: [],
@@ -108,8 +110,8 @@ export default class {
 
     if (ownedPlaylists) {
       playlistsToCheck = ownedPlaylists;
-      currentState.playlists = playlistsToCheck.map((p) => // Create a new array with the result of the playlistToPlaylistModel
-        playlistToPlaylistModel(p)
+      currentState.playlists = playlistsToCheck.map((playlist, index) => // Create a new array with the result of the playlistToPlaylistModel
+        playlistToPlaylistModel(playlist, index)
       );
       console.log('process.ts:  currentState.toProcess and currentState.toDownload set to ' + currentState.playlists.length)
 

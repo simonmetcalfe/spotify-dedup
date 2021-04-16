@@ -13,6 +13,7 @@ export type SpotifyTrackType = {
   linked_from: SpotifyTrackType;
   name: string;
   uri: string;
+  // TODO:  Do we need the location in the playlist 
   // in_playlists?: Array<{ url: SpotifyPlaylistType }>; // Originally planned to store inPlaylists within the track, now it is in the PlaylistModel 
 };
 
@@ -187,6 +188,7 @@ export default class SpotifyWebApi {
       tracks: uris.map((uri) => (typeof uri === 'string' ? { uri: uri } : uri)),
     };
 
+    console.log('spotifyApi.ts:  removeTracksFromPlaylist - the URI data to sent is ' + dataToBeSent)
     const res = await fetch({
       url: `${apiPrefix}/users/${encodeURIComponent(
         userId

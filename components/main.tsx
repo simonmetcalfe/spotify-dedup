@@ -74,26 +74,73 @@ export default class Main extends React.Component<{
     process.process(this.props.api, this.props.user);
   }
 
-  removeFromPlaylist = (playlistName, playlistId, trackName, trackId) => {
-    console.log('main.tsx:  removeFromPlaylist removing ' + trackName + ' (' + trackId + ') from ' + playlistName + ' (' + playlistId + ')')
-  }
-
+  // TODO:  id:string ??
   playTrack = (id) => {
     console.log('main.tsx:  playTrack playing ' + id)
     this.props.api.previewTrack(id);
   }
 
+  removeFromPlaylist = (playlist: PlaylistModel, index: number, inPlaylistsIndex: number) => {
+    (async () => {
+      let trackName = playlist.duplicates[index].track.name;
+      let trackId = playlist.duplicates[index].track.id;
+      let basePlaylist: PlaylistModel;
+      let trackIndex: number; // The location of the duplicate in the basePlaylist
+      let foreignPlaylistNames;
+      let foreignPlaylistIds;
+      // Determine if basePlaylist (where track was removed from) is current playlist or a foreign playlist, and get the PlaylistModel
+      if (inPlaylistsIndex == null) {
+        basePlaylist = playlist;
+        trackIndex = index;
+      } else {
+        basePlaylist = this.state.playlists.find(
+          (p) => p.playlist.id === playlist.duplicates[index].inPlaylists[inPlaylistsIndex].playlist.id
+        );
+        trackIndex = playlist.duplicates[index].inPlaylists[inPlaylistsIndex].trackIndex
+      }
+      // Get the foreign playlist names and IDs (for info only)
+      foreignPlaylistNames = basePlaylist.duplicates[trackIndex].inPlaylists.map((inPlaylist) => { return inPlaylist.playlist.name; }).join(' ,');
+      foreignPlaylistIds = basePlaylist.duplicates[trackIndex].inPlaylists.map((inPlaylist) => { return inPlaylist.playlist.id; }).join(' ,');
+      console.log('main.tsx:  removeFromPlaylist NEW removing ' + trackName + ' (' + trackId + ') from ' + basePlaylist.playlist.name + ' (' + basePlaylist.playlist.id + ') and removing the dupe badges from ' + foreignPlaylistNames + ' (' + foreignPlaylistIds + ')')
+
+
+      /*
+      // Find the location of the base playlist in the store (to delete track from it) 
+      basePlaylistIndex = this.state.playlists.findIndex(
+        (p) => p.playlist.id === basePlaylistId
+      );
+      */
+
+
+      if (basePlaylist.playlist.id === 'starred') {
+        global['alert'] &&
+          global['alert'](
+            'It is not possible to delete duplicates from your Starred playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.'
+          );
+      }
+      if (basePlaylist.playlist.collaborative) {
+        global['alert'] &&
+          global['alert'](
+            'It is not possible to delete duplicates from a collaborative playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.'
+          );
+      } else {
+
+      }
+    })();
+  }
+
+
   removeDuplicates = (playlist: PlaylistModel) => {
     (async () => {
-      console.log('main.tsx:  removeDuplicates is called for playlist ' + playlist.playlist.name)
-      console.log('this.state.playlists is ' + JSON.stringify(this.state.playlists))
+      // console.log('this.state.playlists is ' + JSON.stringify(this.state.playlists))
 
+      // Get the playlists index within the store of playlists
       const index = this.state.playlists.findIndex(
         (p) => p.playlist.id === playlist.playlist.id
       );
-      console.log('The index of the current playlist is ' + index)
+      console.log('Removing duplicates from playlist ' + playlist.playlist.name + ' with index ' + index)
       const playlistModel = this.state.playlists[index];
-      console.log('The current playlist (playlistModel) duplicates are ' + playlistModel.playlist.name + JSON.stringify(playlistModel.duplicates))
+      console.log('The duplicates for playlist ' + playlistModel.playlist.name + ' are ' + JSON.stringify(playlistModel.duplicates))
       if (playlistModel.playlist.id === 'starred') {
         global['alert'] &&
           global['alert'](
@@ -107,7 +154,7 @@ export default class Main extends React.Component<{
           );
       } else {
         try {
-          console.log('PlaylistDeduplicator.removeDuplicates being called for ' + playlistModel.playlist.name + JSON.stringify(playlistModel.duplicates))
+          console.log('PlaylistDeduplicator.removeDuplicates being called for ' + playlistModel.playlist.name)
           await PlaylistDeduplicator.removeDuplicates(
             this.props.api,
             playlistModel
@@ -145,14 +192,7 @@ export default class Main extends React.Component<{
           status: 'process.items.removed',
         },
       });
-      if (global['ga']) {
-        global['ga'](
-          'send',
-          'event',
-          'spotify-dedup',
-          'saved-tracks-removed-duplicates'
-        );
-      }
+
     })();
   }
 
@@ -279,10 +319,9 @@ export default class Main extends React.Component<{
                               trackName={duplicate.track.name}
                               trackArtistName={duplicate.track.artists[0].name}
                               thisPlaylistName={playlist.playlist.name}
-                              thisPlaylistId={playlist.playlist.id}
                               inPlaylists={duplicate.inPlaylists}
                               onPlay={() => this.playTrack(duplicate.track.id)}
-                              onRemove={(playlistName, playlistId) => this.removeFromPlaylist(playlistName, playlistId, duplicate.track.name, duplicate.track.id)}
+                              onRemove={(inPlaylistsIndex) => this.removeFromPlaylist(playlist, index, inPlaylistsIndex)}
                             />
                           </span>
                         ))}
