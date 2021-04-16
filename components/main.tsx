@@ -86,8 +86,8 @@ export default class Main extends React.Component<{
       let trackId = playlist.duplicates[index].track.id;
       let basePlaylist: PlaylistModel;
       let trackIndex: number; // The location of the duplicate in the basePlaylist
-      let foreignPlaylistNames;
-      let foreignPlaylistIds;
+      let foreignPlaylistOccurences;
+      let similarTrack = '';
       // Determine if basePlaylist (where track was removed from) is current playlist or a foreign playlist, and get the PlaylistModel
       if (inPlaylistsIndex == null) {
         basePlaylist = playlist;
@@ -97,19 +97,20 @@ export default class Main extends React.Component<{
           (p) => p.playlist.id === playlist.duplicates[index].inPlaylists[inPlaylistsIndex].playlist.id
         );
         trackIndex = playlist.duplicates[index].inPlaylists[inPlaylistsIndex].trackIndex
+        if (playlist.duplicates[index].inPlaylists[inPlaylistsIndex].similarTrack != null) {
+          similarTrack += ' (actual track to be removed is similar: ' + playlist.duplicates[index].inPlaylists[inPlaylistsIndex].similarTrack.name + ' (' + playlist.duplicates[index].inPlaylists[inPlaylistsIndex].similarTrack.id + '))';
+        }
       }
-      // Get the foreign playlist names and IDs (for info only)
-      foreignPlaylistNames = basePlaylist.duplicates[trackIndex].inPlaylists.map((inPlaylist) => { return inPlaylist.playlist.name; }).join(' ,');
-      foreignPlaylistIds = basePlaylist.duplicates[trackIndex].inPlaylists.map((inPlaylist) => { return inPlaylist.playlist.id; }).join(' ,');
-      console.log('main.tsx:  removeFromPlaylist NEW removing ' + trackName + ' (' + trackId + ') from ' + basePlaylist.playlist.name + ' (' + basePlaylist.playlist.id + ') and removing the dupe badges from ' + foreignPlaylistNames + ' (' + foreignPlaylistIds + ')')
-
-
-      /*
-      // Find the location of the base playlist in the store (to delete track from it) 
-      basePlaylistIndex = this.state.playlists.findIndex(
-        (p) => p.playlist.id === basePlaylistId
-      );
-      */
+      // List the occurences in foreign playlists (for info only)
+      foreignPlaylistOccurences = basePlaylist.duplicates[trackIndex].inPlaylists.map((inPlaylist) => {
+        let occurence;
+        occurence = inPlaylist.playlist.name + ' (' + inPlaylist.playlist.id + ') pos ' + inPlaylist.trackIndex;
+        if (inPlaylist.similarTrack != null) {
+          occurence += ' \nsimilar ' + inPlaylist.similarTrack.name + ' (' + inPlaylist.similarTrack.id;
+        }
+        return occurence;
+      }).join('\n');
+      console.log('main.tsx:  removeFromPlaylist removing ' + trackName + ' (' + trackId + ') ' + similarTrack + ' \n from ' + basePlaylist.playlist.name + ' (' + basePlaylist.playlist.id + ') \n-----------\nand removing the dupe badges occurences \n' + foreignPlaylistOccurences)
 
 
       if (basePlaylist.playlist.id === 'starred') {
