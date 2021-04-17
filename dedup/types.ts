@@ -27,5 +27,5 @@ export type InPlaylistsModel = {
   playlistIndex: number; // The location of the foreign playlist in the store
   reason: string;
   playlist: SpotifyPlaylistType;
-  similarTrack: SpotifyTrackType; // If the track is not identical, store the similar track so we can delete it
+  dupeTrack: SpotifyTrackType; // Always store the track because it may be different (if the match is a similar track)
 }

@@ -16,58 +16,99 @@ class BaseDeduplicator {
     throw 'Not implemented';
   }
 
-  static findDuplicatedTracksInAllPlaylists(currentPlaylist: PlaylistModel, allPlaylists: Array<PlaylistModel>) {
-    const result = currentPlaylist.tracks.reduce((duplicates, track, index) => {
-      if (track === null) return duplicates;
-      if (track.id === null) return duplicates;
-      let foundInPlaylists: Array<InPlaylistsModel> = []; // Build an array of all places the track is seen, as we iterate through all the user's playlists
-      const seenNameAndArtistKey = `${track.name}:${track.artists[0].name}`.toLowerCase();
-      allPlaylists.forEach(function (playlistToCompare, playlistToCompareIndex) {
-        if (currentPlaylist.playlist.name != playlistToCompare.playlist.name) { // Don't compare playlist with itself
-          //console.log('deduplicator.ts:  Comparing ' + playlist.playlist.name + ' with ' + playlistModel.playlist.name);
-          playlistToCompare.tracks.forEach(function (trackToCompare, trackToCompareIndex) {
-            let isDuplicate = '';
-            let similarTrack = null;
-            //console.log('Comparing playlist ' + playlistModel.playlist.name + ' and track ' + spotifyTrackType.name)
-            if (track.id === trackToCompare.id) {
-              //console.log('Dupe of ' + trackToCompare.name + ' (' + index + ') found in ' + playlistToCompare.playlist.name + ' (' + playlistToCompareIndex + ') at pos ' + trackToCompareIndex + ' when playlist ' + currentPlaylist.playlist.name + ' is compared with ' + playlistToCompare.playlist.name)
-              isDuplicate = 'same-id';
-            }
-            else if (seenNameAndArtistKey === `${trackToCompare.name}:${trackToCompare.artists[0].name}`.toLowerCase()
-              && Math.abs(track.duration_ms - trackToCompare.duration_ms) < 2000) {
-              //console.log('Similar dupe of ' + trackToCompare.name + ' found in ' + playlistToCompare.playlist.name)
-              isDuplicate = 'same-name-artist';
-              similarTrack = trackToCompare; // Save similar track so we can find and delete it easily 
-            }
-            if (isDuplicate != '') {
-              foundInPlaylists.push({
-                trackIndex: trackToCompareIndex, // TODO:  THIS IS USELESS BECAUSE WE USE THE DUPLICATES LIST, REMOVE?  The location of the duplicate track in the foreign playlist // won't be unique if the track is in the same position in 2 different playlists
-                playlistIndex: playlistToCompareIndex, // The location of the foreign playlist in the store
-                reason: isDuplicate,
-                playlist: playlistToCompare.playlist,
-                similarTrack: similarTrack
-              })
-            }
-          });
-        }
-      });
+  static findDuplicatedTracksInAllPlaylists(allPlaylists: Array<PlaylistModel>) {
+    let playlistDb = [...allPlaylists];
+    allPlaylists.forEach((playlist, playlistIndex) => {
+      playlist.tracks.forEach((track, trackIndex) => {
+        const seenNameAndArtistKey = `${track.name}:${track.artists[0].name}`.toLowerCase();
+        ///// compareTo loop starts /////
+        allPlaylists.forEach((comparePlaylist, comparePlaylistIndex) => {
+          comparePlaylist.tracks.forEach((compareTrack, compareTrackIndex) => {
+            // console.log('deduplicator.ts:  Comparing ' + playlist.playlist.name + ' with ' + comparePlaylist.playlist.name + ': ' + track.name + "." + compareTrack.name);
+            if (comparePlaylistIndex > playlistIndex) { // Prevents comparison with same playlist and any playlist already compared with
+              let isDuplicate = '';
+              if (track.id === compareTrack.id) {
+                isDuplicate = 'same-id';
+              }
+              else if (seenNameAndArtistKey === `${compareTrack.name}:${compareTrack.artists[0].name}`.toLowerCase()
+                && Math.abs(track.duration_ms - compareTrack.duration_ms) < 2000) {
+                isDuplicate = 'same-name-artist';
+              }
+              // If a duplicate found, save it in the duplicates list for both playlists bz creating an inPlaylists object
+              if (isDuplicate != '') {
 
-      // Finally after iterating through all playlists, if track was found in 1 or more playlists (foundInPlaylists[] is not empty), add the duplicate
-      if (foundInPlaylists.length > 0) {
-        //console.log('deduplicator.ts:  Duplicates found for ' + track.name + ' and the foundInPlaylists array size is ' + foundInPlaylists.length)
-        duplicates.push({
-          index: index,
-          track: track,
-          inPlaylists: foundInPlaylists
+                // CHECK if track already in duplicates array and GET the trackIndex or determine the next free index
+                let baseExists = true;
+                let baseIndex: number = playlistDb[playlistIndex].duplicates.findIndex((duplicate) => { duplicate.track.id = track.id })
+
+                let compareExists = true;
+                let compareIndex: number = playlistDb[comparePlaylistIndex].duplicates.findIndex((duplicate) => { duplicate.track.id = compareTrack.id })
+
+                if (baseIndex == -1) {
+                  baseExists = false;  // Track not already in duplicates array
+                  baseIndex = allPlaylists[playlistIndex].duplicates.length
+                }
+
+
+
+
+                if (compareIndex == -1) {
+                  compareExists = false; // Track not already in duplicates array 
+                  compareIndex = allPlaylists[comparePlaylistIndex].duplicates.length
+                }
+
+                console.log('Dupe found in ' + playlist.playlist.name + ': ' + track.name + ' is also in ' + comparePlaylist.playlist.name + ' ' + baseExists + ' ' + baseIndex + ' ' + compareExists + ' ' + compareIndex)
+
+                //Create the inPlaylists entries 
+                let inPlaylistBase: InPlaylistsModel = {
+                  trackIndex: compareIndex,            // The location of the duplicate track in the foreign playlist duplicate list
+                  playlistIndex: comparePlaylistIndex, // The location of the foreign playlist in the store
+                  reason: isDuplicate,
+                  playlist: comparePlaylist.playlist,
+                  dupeTrack: compareTrack              // Store the track from the other playlist because it may be different if only a 'similar' match
+                }
+
+                //inPlaylists entry for compare playlist
+                let inPlaylistCompare: InPlaylistsModel = {
+                  trackIndex: baseIndex,               // The location of the duplicate track in the foreign playlist duplicate list
+                  playlistIndex: playlistIndex,        // The location of the foreign playlist in the store
+                  reason: isDuplicate,
+                  playlist: playlist.playlist,
+                  dupeTrack: track                     // Store the track from the other playlist because it may be different if only a 'similar' match
+                }
+
+                if (baseExists) {
+                  playlistDb[playlistIndex].duplicates[baseIndex].inPlaylists.push(inPlaylistBase)
+                } else {
+                  playlistDb[playlistIndex].duplicates.push({
+                    index: trackIndex, // Not sure what index we really need here, if any
+                    track: track, // When adding to the dupe list, don't use the track from the other playlist
+                    inPlaylists: [inPlaylistBase]
+                  })
+                }
+
+                if (compareExists) {
+                  playlistDb[comparePlaylistIndex].duplicates[compareIndex].inPlaylists.push(inPlaylistCompare)
+                } else {
+                  playlistDb[playlistIndex].duplicates.push({
+                    index: compareTrackIndex, // Not sure what index we really need here, if any
+                    track: compareTrack,
+                    inPlaylists: [inPlaylistCompare]
+                  })
+                }
+
+              }
+            }
+          })
         })
-      } else {
-        //console.log('deduplicator.ts:  NO duplicates found for ' + track.name)
-      }
-
-      return duplicates;
-    }, []);
-    return result;
+        ///// compareTo loop ends /////
+      })
+    })
+    return playlistDb;
   }
+
+
+
 
   //TODO:  This is not used, consider removing
   static findDuplicatedTracks(tracks: Array<SpotifyTrackType>) {

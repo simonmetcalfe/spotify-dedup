@@ -82,13 +82,26 @@ export default class {
 
     function processAllPlaylists() {
       // console.log('process.ts:  processAllPlaylists running')
+
+      currentState.playlists = PlaylistDeduplicator.findDuplicatedTracksInAllPlaylists(currentState.playlists);
+
+      // TODO:  Temporary hack, fixing
+      currentState.playlists.forEach((playlist) => {
+        playlist.processed = true
+        currentState.toProcess = 0;
+      })
+
+      dispatch('updateState', currentState);
+
+      /*
       for (const playlistModel of currentState.playlists) {
-        //console.log('process.ts:  process func about to find duplicate tracks  ' + playlistModel.playlist.name)
+        // console.log('process.ts:  process func about to find duplicate tracks  ' + playlistModel.playlist.name)
         sleep(1).then(() => {
-          playlistModel.duplicates = PlaylistDeduplicator.findDuplicatedTracksInAllPlaylists(playlistModel, currentState.playlists);
-          onPlaylistProcessed(playlistModel);
+          currentState.playlists = PlaylistDeduplicator.findDuplicatedTracksInAllPlaylists(currentState.playlists);
+          //onPlaylistProcessed(playlistModel);
           // console.log('process.ts:  Contents of playlistModel.duplicates for ' + playlistModel.playlist.name + ' is ' + JSON.stringify(playlistModel.duplicates))
         })
+
         // Do not see the value in storing playlists that don't contain any duplicates - appears to work without it
         /*
         if (playlistModel.duplicates.length === 0) {
@@ -97,8 +110,9 @@ export default class {
             playlistModel.playlist
           );
         }
-        */
+        
       }
+      */
     }
 
     function onPlaylistProcessed(playlist: PlaylistModel) {
