@@ -22,29 +22,29 @@ class BaseDeduplicator {
       if (track.id === null) return duplicates;
       let foundInPlaylists: Array<InPlaylistsModel> = []; // Build an array of all places the track is seen, as we iterate through all the user's playlists
       const seenNameAndArtistKey = `${track.name}:${track.artists[0].name}`.toLowerCase();
-      allPlaylists.forEach(function (playlistModel, playlistIndex) {
-        if (currentPlaylist.playlist.name != playlistModel.playlist.name) { // Don't compare playlist with itself
+      allPlaylists.forEach(function (playlistToCompare, playlistToCompareIndex) {
+        if (currentPlaylist.playlist.name != playlistToCompare.playlist.name) { // Don't compare playlist with itself
           //console.log('deduplicator.ts:  Comparing ' + playlist.playlist.name + ' with ' + playlistModel.playlist.name);
-          playlistModel.tracks.forEach(function (spotifyTrackType, trackIndex) {
+          playlistToCompare.tracks.forEach(function (trackToCompare, trackToCompareIndex) {
             let isDuplicate = '';
             let similarTrack = null;
-            //console.log('Comparing playlist ' + playlistItem.playlist.name + ' and track ' + trackItem.name)
-            if (track.id === spotifyTrackType.id) {
-              // console.log('Dupe of ' + spotifyTrackType.name + ' found in ' + playlistModel.playlist.name)
+            //console.log('Comparing playlist ' + playlistModel.playlist.name + ' and track ' + spotifyTrackType.name)
+            if (track.id === trackToCompare.id) {
+              //console.log('Dupe of ' + trackToCompare.name + ' (' + index + ') found in ' + playlistToCompare.playlist.name + ' (' + playlistToCompareIndex + ') at pos ' + trackToCompareIndex + ' when playlist ' + currentPlaylist.playlist.name + ' is compared with ' + playlistToCompare.playlist.name)
               isDuplicate = 'same-id';
             }
-            else if (seenNameAndArtistKey === `${spotifyTrackType.name}:${spotifyTrackType.artists[0].name}`.toLowerCase()
-              && Math.abs(track.duration_ms - spotifyTrackType.duration_ms) < 2000) {
-              // console.log('Similar dupe of ' + spotifyTrackType.name + ' found in ' + playlistModel.playlist.name)
+            else if (seenNameAndArtistKey === `${trackToCompare.name}:${trackToCompare.artists[0].name}`.toLowerCase()
+              && Math.abs(track.duration_ms - trackToCompare.duration_ms) < 2000) {
+              //console.log('Similar dupe of ' + trackToCompare.name + ' found in ' + playlistToCompare.playlist.name)
               isDuplicate = 'same-name-artist';
-              similarTrack = spotifyTrackType; // Save similar track so we can find and delete it easily 
+              similarTrack = trackToCompare; // Save similar track so we can find and delete it easily 
             }
             if (isDuplicate != '') {
               foundInPlaylists.push({
-                trackIndex: trackIndex, // The location of the duplicate track in the foreign playlist // won't be unique if the track is in the same position in 2 different playlists
-                playlistIndex: playlistIndex, // The location of the foreign playlist in the store
+                trackIndex: trackToCompareIndex, // The location of the duplicate track in the foreign playlist // won't be unique if the track is in the same position in 2 different playlists
+                playlistIndex: playlistToCompareIndex, // The location of the foreign playlist in the store
                 reason: isDuplicate,
-                playlist: playlistModel.playlist,
+                playlist: playlistToCompare.playlist,
                 similarTrack: similarTrack
               })
             }
@@ -54,7 +54,7 @@ class BaseDeduplicator {
 
       // Finally after iterating through all playlists, if track was found in 1 or more playlists (foundInPlaylists[] is not empty), add the duplicate
       if (foundInPlaylists.length > 0) {
-        // console.log('deduplicator.ts:  Duplicates found for ' + track.name + ' and the foundInPlaylists array size is ' + foundInPlaylists.length)
+        //console.log('deduplicator.ts:  Duplicates found for ' + track.name + ' and the foundInPlaylists array size is ' + foundInPlaylists.length)
         duplicates.push({
           index: index,
           track: track,
@@ -100,7 +100,7 @@ class BaseDeduplicator {
             ).length !== 0
           ) {
             isDuplicate = true;
-            //onsole.log('deduplicator.ts:  tracks.reduce found similar ' + track.id + ' ' + track.name)
+            //console.log('deduplicator.ts:  tracks.reduce found similar ' + track.id + ' ' + track.name)
           }
         }
       }

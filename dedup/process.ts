@@ -63,7 +63,15 @@ export default class {
     const dispatch = this.dispatch.bind(this);
 
     function onPlaylistDownloaded(playlist: PlaylistModel) {
-      // console.log('process.ts:  onPlaylistDownloaded running for ' + playlist.playlist.name + ' with currentState.toDownload at ' + currentState.toDownload) // Model is just SportifyPlaylistType and duplicates array
+      // console.log('process.ts:  onPlaylistDownloaded running for ' + playlist.playlist.name) // Model is just SportifyPlaylistType and duplicates array
+      /*
+      var tracklist = '';
+      for (let i = 0; i < playlist.tracks.length; i++) {
+        tracklist += '(' + i + ') ' + playlist.tracks[i].name + '\n'
+      }
+      console.log('process.ts:  onPlaylistDownloaded tracks in ' + playlist.playlist.name + ' are ' + tracklist)
+      */
+
       playlist.downloaded = true;
       currentState.toDownload -= 1;
       if (currentState.toDownload === 0) {
@@ -75,12 +83,12 @@ export default class {
     function processAllPlaylists() {
       console.log('process.ts:  processAllPlaylists running')
       for (const playlistModel of currentState.playlists) {
-        // console.log('process.ts:  process func about to find duplicate tracks  ' + playlistModel.playlist.name)
+        console.log('process.ts:  process func about to find duplicate tracks  ' + playlistModel.playlist.name)
         sleep(1).then(() => {
           playlistModel.duplicates = PlaylistDeduplicator.findDuplicatedTracksInAllPlaylists(playlistModel, currentState.playlists);
           onPlaylistProcessed(playlistModel);
+          console.log('process.ts:  Contents of playlistModel.duplicates for ' + playlistModel.playlist.name + ' is ' + JSON.stringify(playlistModel.duplicates))
         })
-        //console.log('process.ts:  Contents of playlistModel.duplicates for ' + playlistModel.playlist.name + ' is ' + JSON.stringify(playlistModel.duplicates))
         // Do not see the value in storing playlists that don't contain any duplicates - appears to work without it
         /*
         if (playlistModel.duplicates.length === 0) {

@@ -82,6 +82,7 @@ export default class Main extends React.Component<{
 
   removeFromPlaylist = (playlist: PlaylistModel, index: number, inPlaylistsIndex: number) => {
     (async () => {
+      console.log('ReMOVE FROM PLAYLIST')
       let trackName = playlist.duplicates[index].track.name;
       let trackId = playlist.duplicates[index].track.id;
       let basePlaylist: PlaylistModel;
@@ -101,17 +102,6 @@ export default class Main extends React.Component<{
           similarTrack += ' (actual track to be removed is similar: ' + playlist.duplicates[index].inPlaylists[inPlaylistsIndex].similarTrack.name + ' (' + playlist.duplicates[index].inPlaylists[inPlaylistsIndex].similarTrack.id + '))';
         }
       }
-      // List the occurences in foreign playlists (for info only)
-      foreignPlaylistOccurences = basePlaylist.duplicates[trackIndex].inPlaylists.map((inPlaylist) => {
-        let occurence;
-        occurence = inPlaylist.playlist.name + ' (' + inPlaylist.playlist.id + ') pos ' + inPlaylist.trackIndex;
-        if (inPlaylist.similarTrack != null) {
-          occurence += ' \nsimilar ' + inPlaylist.similarTrack.name + ' (' + inPlaylist.similarTrack.id;
-        }
-        return occurence;
-      }).join('\n');
-      console.log('main.tsx:  removeFromPlaylist removing ' + trackName + ' (' + trackId + ') ' + similarTrack + ' \n from ' + basePlaylist.playlist.name + ' (' + basePlaylist.playlist.id + ') \n-----------\nand removing the dupe badges occurences \n' + foreignPlaylistOccurences)
-
 
       if (basePlaylist.playlist.id === 'starred') {
         global['alert'] &&
@@ -119,12 +109,22 @@ export default class Main extends React.Component<{
             'It is not possible to delete duplicates from your Starred playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.'
           );
       }
-      if (basePlaylist.playlist.collaborative) {
+      else if (basePlaylist.playlist.collaborative) {
         global['alert'] &&
           global['alert'](
             'It is not possible to delete duplicates from a collaborative playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.'
           );
       } else {
+        // List the occurences in foreign playlists (for info only)
+        foreignPlaylistOccurences = basePlaylist.duplicates[trackIndex].inPlaylists.map((inPlaylist) => {
+          let occurence;
+          occurence = inPlaylist.playlist.name + ' (' + inPlaylist.playlist.id + ') pos ' + inPlaylist.trackIndex;
+          if (inPlaylist.similarTrack != null) {
+            occurence += ' \nsimilar ' + inPlaylist.similarTrack.name + ' (' + inPlaylist.similarTrack.id;
+          }
+          return occurence;
+        }).join('\n');
+        console.log('main.tsx:  removeFromPlaylist removing ' + trackName + ' (' + trackId + ') ' + similarTrack + ' \n from ' + basePlaylist.playlist.name + ' (' + basePlaylist.playlist.id + ') \n-----------\nand removing the dupe badges occurences \n' + foreignPlaylistOccurences)
 
       }
     })();
