@@ -10,7 +10,7 @@ export const BadgeRemove3 = (props: { label, reason, onRemove: () => void }) => 
                     <span className='all same-id'>
                         <div>
                             {props.label}
-                            <span className="all close-button" onClick={props.onRemove}>
+                            <span className="all close-button">
                                 <FontAwesomeIcon icon={faTimesCircle} className="close-button" onClick={props.onRemove} />
                             </span>
                         </div>
@@ -19,7 +19,7 @@ export const BadgeRemove3 = (props: { label, reason, onRemove: () => void }) => 
                         <span className='all same-name-artist'>
                             <div>
                                 {props.label}
-                                <span className="all close-button" onClick={props.onRemove}>
+                                <span className="all close-button" >
                                     <FontAwesomeIcon icon={faTimesCircle} className="close-button" onClick={props.onRemove} />
                                 </span>
                             </div>
@@ -28,7 +28,7 @@ export const BadgeRemove3 = (props: { label, reason, onRemove: () => void }) => 
                         <span className='all default'>
                             <div>
                                 {props.label}
-                                <span className="all close-button" onClick={props.onRemove}>
+                                <span className="all close-button" >
                                     <FontAwesomeIcon icon={faTimesCircle} className="close-button" onClick={props.onRemove} />
                                 </span>
                             </div>
@@ -58,7 +58,7 @@ export const BadgeRemove3 = (props: { label, reason, onRemove: () => void }) => 
           }
 
           .same-name-artist {
-            background-color: #bbb;
+            background-color: #ccc;
           }
 
           .default {

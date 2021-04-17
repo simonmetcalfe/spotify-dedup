@@ -82,27 +82,46 @@ export default class Main extends React.Component<{
 
   removeFromPlaylist = (playlist: PlaylistModel, index: number, inPlaylistsIndex: number) => {
     (async () => {
-      console.log('ReMOVE FROM PLAYLIST')
       let trackName = playlist.duplicates[index].track.name;
       let trackId = playlist.duplicates[index].track.id;
       let basePlaylist: PlaylistModel;
-      let trackIndex: number; // The location of the duplicate in the basePlaylist
+      let basePlaylistIndex: number; // Location of the basePlaylist in the plaaylist store
+      let trackIndex: number; // The location of the duplicate in the basePlaylist duplicates list
       let foreignPlaylistOccurences;
       let similarTrack = '';
       // Determine if basePlaylist (where track was removed from) is current playlist or a foreign playlist, and get the PlaylistModel
+      console.log('inPlaylistsIndex is  curently ' + inPlaylistsIndex)
       if (inPlaylistsIndex == null) {
+        basePlaylistIndex = playlist.index;
         basePlaylist = playlist;
         trackIndex = index;
       } else {
-        basePlaylist = this.state.playlists.find(
-          (p) => p.playlist.id === playlist.duplicates[index].inPlaylists[inPlaylistsIndex].playlist.id
-        );
-        trackIndex = playlist.duplicates[index].inPlaylists[inPlaylistsIndex].trackIndex
+        basePlaylistIndex = playlist.duplicates[index].inPlaylists[inPlaylistsIndex].playlistIndex;
+        basePlaylist = this.state.playlists[basePlaylistIndex];
+        trackIndex = playlist.duplicates[index].inPlaylists[inPlaylistsIndex].trackIndex;
+        /*
+        trackIndex = this.state.playlists[basePlaylistIndex].duplicates.findIndex((duplicate) => {
+          duplicate.track.id = playlist.duplicates[index].track.id //POTENTIAL SOLUTION IS TO SEARCH AND MATCH ITEMS, BUT IT IS POOR DESIGN
+        });
+        */
+
         if (playlist.duplicates[index].inPlaylists[inPlaylistsIndex].similarTrack != null) {
           similarTrack += ' (actual track to be removed is similar: ' + playlist.duplicates[index].inPlaylists[inPlaylistsIndex].similarTrack.name + ' (' + playlist.duplicates[index].inPlaylists[inPlaylistsIndex].similarTrack.id + '))';
         }
       }
 
+      // Logging - list the occurences in foreign playlists (for info only)
+      foreignPlaylistOccurences = basePlaylist.duplicates[trackIndex].inPlaylists.map((inPlaylist) => {
+        let occurence;
+        occurence = inPlaylist.playlist.name + ' (' + inPlaylist.playlist.id + ') pos ' + inPlaylist.trackIndex;
+        if (inPlaylist.similarTrack != null) {
+          occurence += ' \nsimilar ' + inPlaylist.similarTrack.name + ' (' + inPlaylist.similarTrack.id;
+        }
+        return occurence;
+      }).join('\n');
+
+
+      // Check playlist is not starred or collaborative
       if (basePlaylist.playlist.id === 'starred') {
         global['alert'] &&
           global['alert'](
@@ -115,16 +134,41 @@ export default class Main extends React.Component<{
             'It is not possible to delete duplicates from a collaborative playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.'
           );
       } else {
-        // List the occurences in foreign playlists (for info only)
-        foreignPlaylistOccurences = basePlaylist.duplicates[trackIndex].inPlaylists.map((inPlaylist) => {
-          let occurence;
-          occurence = inPlaylist.playlist.name + ' (' + inPlaylist.playlist.id + ') pos ' + inPlaylist.trackIndex;
-          if (inPlaylist.similarTrack != null) {
-            occurence += ' \nsimilar ' + inPlaylist.similarTrack.name + ' (' + inPlaylist.similarTrack.id;
-          }
-          return occurence;
-        }).join('\n');
+        // Summarise delete operation
         console.log('main.tsx:  removeFromPlaylist removing ' + trackName + ' (' + trackId + ') ' + similarTrack + ' \n from ' + basePlaylist.playlist.name + ' (' + basePlaylist.playlist.id + ') \n-----------\nand removing the dupe badges occurences \n' + foreignPlaylistOccurences)
+        /*
+        // Delete the track
+        try {
+          await PlaylistDeduplicator.removeTrack(
+            this.props.api,
+            playlistModel
+          );
+          console.log('Making a copy of all playlists (this.state.playlists')
+          const playlistsCopy = [...this.state.playlists];
+          playlistsCopy[index].duplicates = []; // For the copy of all playlists, find the current playlist in the copy, and clear the duplicates
+          playlistsCopy[index].status = 'process.items.removed'; // Status is 'Duplicates removed'
+          this.setState({ ...this.state, playlists: [...playlistsCopy] }); // State is updated with the copy
+        } catch (e) {
+          global['Raven'] &&
+            global['Raven'].captureMessage(
+              `Exception trying to remove duplicates from playlist`,
+              {
+                extra: {
+                  duplicates: playlistModel.duplicates,
+                },
+              }
+            );
+        }
+        */
+        /*
+                api: SpotifyWebApi,
+                uri: string,
+                index: number,
+                playlistModel: PlaylistModel
+        */
+
+
+
 
       }
     })();

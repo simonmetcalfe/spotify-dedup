@@ -41,7 +41,7 @@ class BaseDeduplicator {
             }
             if (isDuplicate != '') {
               foundInPlaylists.push({
-                trackIndex: trackToCompareIndex, // The location of the duplicate track in the foreign playlist // won't be unique if the track is in the same position in 2 different playlists
+                trackIndex: trackToCompareIndex, // TODO:  THIS IS USELESS BECAUSE WE USE THE DUPLICATES LIST, REMOVE?  The location of the duplicate track in the foreign playlist // won't be unique if the track is in the same position in 2 different playlists
                 playlistIndex: playlistToCompareIndex, // The location of the foreign playlist in the store
                 reason: isDuplicate,
                 playlist: playlistToCompare.playlist,
