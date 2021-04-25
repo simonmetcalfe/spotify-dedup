@@ -98,7 +98,12 @@ export default class Main extends React.Component<{
       } else {
         basePlaylistIndex = playlist.duplicates[index].inPlaylists[inPlaylistsIndex].playlistIndex;
         basePlaylist = this.state.playlists[basePlaylistIndex];
-        trackIndex = playlist.duplicates[index].inPlaylists[inPlaylistsIndex].trackIndex;
+        // trackIndex = playlist.duplicates[index].inPlaylists[inPlaylistsIndex].trackIndex;
+
+        trackIndex = basePlaylist.duplicates.findIndex((duplicate) => {
+          duplicate.index == playlist.duplicates[index].inPlaylists[inPlaylistsIndex].trackIndex;
+        })
+
         /*
         trackIndex = this.state.playlists[basePlaylistIndex].duplicates.findIndex((duplicate) => {
           duplicate.track.id = playlist.duplicates[index].track.id //POTENTIAL SOLUTION IS TO SEARCH AND MATCH ITEMS, BUT IT IS POOR DESIGN
