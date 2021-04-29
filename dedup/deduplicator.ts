@@ -18,7 +18,6 @@ class BaseDeduplicator {
 
   static findDuplicatedTracksInAllPlaylists(currentPlaylist: PlaylistModel, allPlaylists: Array<PlaylistModel>) {
     const result = currentPlaylist.tracks.reduce((duplicates, track, index) => {
-      console.log(`Scanning track ${track.name} with id ${index}`)
       if (track === null) return duplicates;
       if (track.id === null) return duplicates;
       let foundInPlaylists: Array<InPlaylistsModel> = []; // Build an array of all places the track is seen, as we iterate through all the user's playlists
@@ -42,7 +41,7 @@ class BaseDeduplicator {
             }
             if (isDuplicate != '') {
               foundInPlaylists.push({
-                trackIndex: trackToCompareIndex, // TODO:  THIS IS USELESS BECAUSE WE USE THE DUPLICATES LIST, REMOVE?  The location of the duplicate track in the foreign playlist // won't be unique if the track is in the same position in 2 different playlists
+                trackIndex: trackToCompareIndex, // The location of the duplicate track in the foreign playlist 
                 playlistIndex: playlistToCompareIndex, // The location of the foreign playlist in the store
                 reason: isDuplicate,
                 playlist: playlistToCompare.playlist,
@@ -56,7 +55,6 @@ class BaseDeduplicator {
       // Finally after iterating through all playlists, if track was found in 1 or more playlists (foundInPlaylists[] is not empty), add the duplicate
       if (foundInPlaylists.length > 0) {
         //console.log('deduplicator.ts:  Duplicates found for ' + track.name + ' and the foundInPlaylists array size is ' + foundInPlaylists.length)
-        console.log(`DUPLICATE FOUND WITH TRACK INDEX ${index}`)
         duplicates.push({
           trackIndex: index,
           track: track,

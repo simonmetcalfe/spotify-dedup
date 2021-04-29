@@ -82,79 +82,46 @@ export default class Main extends React.Component<{
 
   removeFromPlaylist = (playlist: PlaylistModel, index: number, inPlaylistsIndex: number) => {
     (async () => {
-      let trackName = playlist.duplicates[index].track.name;
-      let trackId = playlist.duplicates[index].track.id;
+      let trackName: string;
+      let trackId: string;
       let basePlaylist: PlaylistModel;
       let basePlaylistIndex: number; // Location of the basePlaylist in the playlist store
-      let trackIndexOld: number; // The location of the duplicate in the basePlaylist duplicates list
-      let trackIndexNew: number; // New calc method of the track index
-      let foreignPlaylistOccurences;
-      let similarTrack: string;
+      let trackIndex: number; // New calc method of the track index
+      let similarTrack: SpotifyTrackType;
       // Determine if basePlaylist (where track was removed from) is current playlist or a foreign playlist, and get the PlaylistModel
       console.log('inPlaylistsIndex is  curently ' + inPlaylistsIndex)
       if (inPlaylistsIndex == null) {
+        // Track removed from the current playlist
+        trackName = playlist.duplicates[index].track.name;
+        trackId = playlist.duplicates[index].track.id;
         basePlaylistIndex = playlist.playlistIndex;
         basePlaylist = playlist;
-        trackIndexOld = index; // Works fine for basePlaylist, we know exactly which track in the duplicates list was removed
-        trackIndexNew = index;
+        trackIndex = index;
       } else {
+        // Track removed from the foreign playlist - search its duplicates list to find the trackIndex of the removed file
+        similarTrack = playlist.duplicates[index].inPlaylists[inPlaylistsIndex].similarTrack;
+        trackName = similarTrack == null ? playlist.duplicates[index].track.name : similarTrack.name;
+        trackId = similarTrack == null ? playlist.duplicates[index].track.id : similarTrack.id;
         basePlaylistIndex = playlist.duplicates[index].inPlaylists[inPlaylistsIndex].playlistIndex;
         basePlaylist = this.state.playlists[basePlaylistIndex];
-        trackIndexOld = playlist.duplicates[index].inPlaylists[inPlaylistsIndex].trackIndex;  // Should not work, this is the index in the original track list
-        /*
-        trackIndexNew = this.state.playlists[basePlaylistIndex].duplicates.findIndex((duplicate) => {
-          duplicate.trackIndex = playlist.duplicates[index].inPlaylists[inPlaylistsIndex].trackIndex //POTENTIAL SOLUTION IS TO SEARCH AND MATCH ITEMS, BUT IT IS POOR DESIGN
-        });
-        */
+        trackIndex = this.state.playlists[basePlaylistIndex].duplicates.findIndex((duplicate) =>
+          duplicate.trackIndex == playlist.duplicates[index].inPlaylists[inPlaylistsIndex].trackIndex
+        );
 
-        console.log(`Checking for dupe id ${playlist.duplicates[index].inPlaylists[inPlaylistsIndex].trackIndex} in playlist ${this.state.playlists[basePlaylistIndex].playlist.name} with ${this.state.playlists[basePlaylistIndex].duplicates.length} duplicates`)
-        for (var i = 0; i < this.state.playlists[basePlaylistIndex].duplicates.length; i++) {
-          //console.log(`${i}) Comparing ${playlist.duplicates[index].inPlaylists[inPlaylistsIndex].trackIndex} with ${this.state.playlists[basePlaylistIndex].duplicates[i].trackIndex}`)
-          if (this.state.playlists[basePlaylistIndex].duplicates[i].trackIndex == playlist.duplicates[index].inPlaylists[inPlaylistsIndex].trackIndex) {
-            console.log('TRUE')
-            trackIndexNew = i;
-          }
-        }
-
-        // Log the similar track
-        if (playlist.duplicates[index].inPlaylists[inPlaylistsIndex].similarTrack != null) {
-          similarTrack == `${playlist.duplicates[index].inPlaylists[inPlaylistsIndex].similarTrack.name} (${playlist.duplicates[index].inPlaylists[inPlaylistsIndex].similarTrack.id})`;
-        }
       }
 
-      /*
-      for (var i = 0; i < basePlaylist.duplicates.length; i++) {
-        console.log(`${basePlaylist.duplicates[i].track.name} id ${basePlaylist.duplicates[i].trackIndex}`)
-      }
-      */
-
-      console.log(`main.tsx:  
-      REMOVING
-      --------
-      track ${trackName} (${trackId})
-      similarTrack ${similarTrack}
-      base playlist (index ${basePlaylistIndex}) ${basePlaylist.playlist.name} (${basePlaylist.playlist.id}) 
-      old/new track index in base playlist ${trackIndexOld}/${trackIndexNew}
-      dupe index in inPlaylists ${inPlaylistsIndex}
-      DUPES:   `)
-
-
-      // Logging - list the occurences in foreign playlists (for info only)
-      foreignPlaylistOccurences = basePlaylist.duplicates[trackIndexNew].inPlaylists.map((inPlaylist) => {
-        let occurence;
-        occurence = inPlaylist.playlist.name + ' (' + inPlaylist.playlist.id + ') pos ' + inPlaylist.trackIndex;
-        if (inPlaylist.similarTrack != null) {
-          occurence += ' \nsimilar ' + inPlaylist.similarTrack.name + ' (' + inPlaylist.similarTrack.id;
-        }
-        return occurence;
+      // List occurences in foreign playlists
+      let foreignPlaylistOccurences = basePlaylist.duplicates[trackIndex].inPlaylists.map((inPlaylist) => {
+        return `        ${inPlaylist.playlist.name} (${inPlaylist.playlist.id}) pos ${inPlaylist.trackIndex}` +
+          `${inPlaylist.similarTrack == null ? '' : '\n' + '          Similar ' + inPlaylist.similarTrack.name + ' (' + inPlaylist.similarTrack.id + ')'}`
       }).join('\n');
 
-
-
-
-
-
-
+      // Log the delete
+      console.log(`main.tsx:
+      Removing ${trackName} (${trackId})
+        Similar ${similarTrack == null ? '' : similarTrack.name + ' (' + similarTrack.id + ')'}
+      From playlist ${basePlaylist.playlist.name} (${basePlaylist.playlist.id}) pos ${trackIndex}
+      Duplicates  \n${foreignPlaylistOccurences} `)
 
       // Check playlist is not starred or collaborative
       if (basePlaylist.playlist.id === 'starred') {
@@ -169,8 +136,8 @@ export default class Main extends React.Component<{
             'It is not possible to delete duplicates from a collaborative playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.'
           );
       } else {
-        // Summarise delete operation
-        console.log('main.tsx:  removeFromPlaylist removing ' + trackName + ' (' + trackId + ') ' + similarTrack + ' \n from ' + basePlaylist.playlist.name + ' (' + basePlaylist.playlist.id + ') \n-----------\nand removing the dupe badges occurences \n' + foreignPlaylistOccurences)
+
+
         /*
         // Delete the track
         try {
@@ -414,84 +381,84 @@ export default class Main extends React.Component<{
         </ul>
         <style jsx>
           {`
-            .bd {
-              position: relative;
-            }
+        .bd {
+        position: relative;
+      }
 
             .media,
             .bd {
-              overflow: hidden;
-              _overflow: visible;
-              zoom: 1;
-            }
+        overflow: hidden;
+        _overflow: visible;
+        zoom: 1;
+      }
 
-            .media .img {
-              float: left;
-              margin-right: 20px;
-            }
+            .media.img {
+        float: left;
+        margin - right: 20px;
+      }
 
-            img {
-              vertical-align: middle;
-            }
+      img {
+        vertical - align: middle;
+      }
 
-            .playlists-list-item {
-              margin-bottom: 2rem;
-            }
+            .playlists - list - item {
+        margin - bottom: 2rem;
+      }
 
-            .playlists-list-item__img {
-              width: 100px;
-            }
+            .playlists - list - item__img {
+        width: 100px;
+      }
 
             .btn {
-              background-image: none;
-              border: 1px solid transparent;
-              border-radius: 4px;
-              cursor: pointer;
-              display: inline-block;
-              font-size: 14px;
-              font-weight: 400;
-              line-height: 1.428571429;
-              margin-bottom: 0;
-              padding: 6px 12px;
-              text-align: center;
-              vertical-align: middle;
-              white-space: nowrap;
-            }
+        background - image: none;
+        border: 1px solid transparent;
+        border - radius: 4px;
+        cursor: pointer;
+        display: inline - block;
+        font - size: 14px;
+        font - weight: 400;
+        line - height: 1.428571429;
+        margin - bottom: 0;
+        padding: 6px 12px;
+        text - align: center;
+        vertical - align: middle;
+        white - space: nowrap;
+      }
 
-            .btn-primary {
-              background-color: #428bca;
-              border-color: #357ebd;
-              color: #fff;
-            }
+            .btn - primary {
+        background - color: #428bca;
+        border - color: #357ebd;
+        color: #fff;
+      }
 
-            .btn-primary:hover {
-              background-color: #5094ce;
-            }
+            .btn - primary: hover {
+        background - color: #5094ce;
+      }
 
-            .playlist-list-item__btn {
-              max-width: 50%;
-              position: absolute;
-              right: 0;
-              top: 0;
-            }
+            .playlist - list - item__btn {
+        max - width: 50 %;
+        position: absolute;
+        right: 0;
+        top: 0;
+      }
 
-            @media (max-width: 700px) {
-              .playlist-list-item__btn {
-                max-width: 100%;
-                position: relative;
-              }
-            }
+      @media(max - width: 700px) {
+              .playlist - list - item__btn {
+          max - width: 100 %;
+          position: relative;
+        }
+      }
 
-            .playlists-list-item__name {
-              display: block;
-              font-weight: bold;
-              max-width: 50%;
-            }
+            .playlists - list - item__name {
+        display: block;
+        font - weight: bold;
+        max - width: 50 %;
+      }
 
-            ul {
-              padding: 0;
-            }
-          `}
+      ul {
+        padding: 0;
+      }
+      `}
         </style>
       </div>
     );
