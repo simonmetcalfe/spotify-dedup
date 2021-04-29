@@ -85,33 +85,62 @@ export default class Main extends React.Component<{
       let trackName = playlist.duplicates[index].track.name;
       let trackId = playlist.duplicates[index].track.id;
       let basePlaylist: PlaylistModel;
-      let basePlaylistIndex: number; // Location of the basePlaylist in the plaaylist store
-      let trackIndex: number; // The location of the duplicate in the basePlaylist duplicates list
+      let basePlaylistIndex: number; // Location of the basePlaylist in the playlist store
+      let trackIndexOld: number; // The location of the duplicate in the basePlaylist duplicates list
+      let trackIndexNew: number; // New calc method of the track index
       let foreignPlaylistOccurences;
-      let similarTrack = '';
+      let similarTrack: string;
       // Determine if basePlaylist (where track was removed from) is current playlist or a foreign playlist, and get the PlaylistModel
       console.log('inPlaylistsIndex is  curently ' + inPlaylistsIndex)
       if (inPlaylistsIndex == null) {
-        basePlaylistIndex = playlist.index;
+        basePlaylistIndex = playlist.playlistIndex;
         basePlaylist = playlist;
-        trackIndex = index;
+        trackIndexOld = index; // Works fine for basePlaylist, we know exactly which track in the duplicates list was removed
+        trackIndexNew = index;
       } else {
         basePlaylistIndex = playlist.duplicates[index].inPlaylists[inPlaylistsIndex].playlistIndex;
         basePlaylist = this.state.playlists[basePlaylistIndex];
-        trackIndex = playlist.duplicates[index].inPlaylists[inPlaylistsIndex].trackIndex;
+        trackIndexOld = playlist.duplicates[index].inPlaylists[inPlaylistsIndex].trackIndex;  // Should not work, this is the index in the original track list
         /*
-        trackIndex = this.state.playlists[basePlaylistIndex].duplicates.findIndex((duplicate) => {
-          duplicate.track.id = playlist.duplicates[index].track.id //POTENTIAL SOLUTION IS TO SEARCH AND MATCH ITEMS, BUT IT IS POOR DESIGN
+        trackIndexNew = this.state.playlists[basePlaylistIndex].duplicates.findIndex((duplicate) => {
+          duplicate.trackIndex = playlist.duplicates[index].inPlaylists[inPlaylistsIndex].trackIndex //POTENTIAL SOLUTION IS TO SEARCH AND MATCH ITEMS, BUT IT IS POOR DESIGN
         });
         */
 
+        console.log(`Checking for dupe id ${playlist.duplicates[index].inPlaylists[inPlaylistsIndex].trackIndex} in playlist ${this.state.playlists[basePlaylistIndex].playlist.name} with ${this.state.playlists[basePlaylistIndex].duplicates.length} duplicates`)
+        for (var i = 0; i < this.state.playlists[basePlaylistIndex].duplicates.length; i++) {
+          //console.log(`${i}) Comparing ${playlist.duplicates[index].inPlaylists[inPlaylistsIndex].trackIndex} with ${this.state.playlists[basePlaylistIndex].duplicates[i].trackIndex}`)
+          if (this.state.playlists[basePlaylistIndex].duplicates[i].trackIndex == playlist.duplicates[index].inPlaylists[inPlaylistsIndex].trackIndex) {
+            console.log('TRUE')
+            trackIndexNew = i;
+          }
+        }
+
+        // Log the similar track
         if (playlist.duplicates[index].inPlaylists[inPlaylistsIndex].similarTrack != null) {
-          similarTrack += ' (actual track to be removed is similar: ' + playlist.duplicates[index].inPlaylists[inPlaylistsIndex].similarTrack.name + ' (' + playlist.duplicates[index].inPlaylists[inPlaylistsIndex].similarTrack.id + '))';
+          similarTrack == `${playlist.duplicates[index].inPlaylists[inPlaylistsIndex].similarTrack.name} (${playlist.duplicates[index].inPlaylists[inPlaylistsIndex].similarTrack.id})`;
         }
       }
 
+      /*
+      for (var i = 0; i < basePlaylist.duplicates.length; i++) {
+        console.log(`${basePlaylist.duplicates[i].track.name} id ${basePlaylist.duplicates[i].trackIndex}`)
+      }
+      */
+
+      console.log(`main.tsx:  
+      REMOVING
+      --------
+      track ${trackName} (${trackId})
+      similarTrack ${similarTrack}
+      base playlist (index ${basePlaylistIndex}) ${basePlaylist.playlist.name} (${basePlaylist.playlist.id}) 
+      old/new track index in base playlist ${trackIndexOld}/${trackIndexNew}
+      dupe index in inPlaylists ${inPlaylistsIndex}
+      DUPES:   `)
+
+
       // Logging - list the occurences in foreign playlists (for info only)
-      foreignPlaylistOccurences = basePlaylist.duplicates[trackIndex].inPlaylists.map((inPlaylist) => {
+      foreignPlaylistOccurences = basePlaylist.duplicates[trackIndexNew].inPlaylists.map((inPlaylist) => {
         let occurence;
         occurence = inPlaylist.playlist.name + ' (' + inPlaylist.playlist.id + ') pos ' + inPlaylist.trackIndex;
         if (inPlaylist.similarTrack != null) {
@@ -119,6 +148,12 @@ export default class Main extends React.Component<{
         }
         return occurence;
       }).join('\n');
+
+
+
+
+
+
 
 
       // Check playlist is not starred or collaborative

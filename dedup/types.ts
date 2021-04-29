@@ -6,10 +6,10 @@ import { ReactElement } from 'react';
 // Also added to PlaylistModel is an array of SpotifyTrackType to store the tracks.  This is because the Spotify playlist model only has 
 // an array of links (href: string) and not the full track information which is required by SpotifyDedup
 export type PlaylistModel = {
-  index: number; // The location of this playlist in the playlists store
+  playlistIndex: number; // The location of this playlist in the playlists store
   playlist: SpotifyPlaylistType;
   duplicates: Array<{
-    index: number;
+    trackIndex: number;
     //reason: string;  // An reason is required for each occurance in another playlist, hence reason is moved to the Playlists array
     track: SpotifyTrackType;
     inPlaylists: Array<InPlaylistsModel>;
