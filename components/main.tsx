@@ -82,44 +82,40 @@ export default class Main extends React.Component<{
 
   removeFromPlaylist = (playlist: PlaylistModel, index: number, inPlaylistsIndex: number) => {
     (async () => {
-      let trackName: string;
-      let trackId: string;
-      let basePlaylist: PlaylistModel;
-      let basePlaylistIndex: number; // Location of the basePlaylist in the playlist store
-      let trackIndex: number; // New calc method of the track index
-      let similarTrack: SpotifyTrackType;
-      // Determine if basePlaylist (where track was removed from) is current playlist or a foreign playlist, and get the PlaylistModel
-      console.log('inPlaylistsIndex is  curently ' + inPlaylistsIndex)
+
+
+
+      let basePlaylistIndex: number;        // Location of basePlaylist in the playlist store
+      let basePlaylist: PlaylistModel;      // Playlist to remove the track from
+      let trackIndex: number;               // Location of track basePlaylist's duplicates list
+      let trackToRemove: SpotifyTrackType;  // Track to be removed from Spotify
+
       if (inPlaylistsIndex == null) {
         // Track removed from the current playlist
-        trackName = playlist.duplicates[index].track.name;
-        trackId = playlist.duplicates[index].track.id;
         basePlaylistIndex = playlist.playlistIndex;
         basePlaylist = playlist;
         trackIndex = index;
+        trackToRemove = playlist.duplicates[index].track;
       } else {
-        // Track removed from the foreign playlist - search its duplicates list to find the trackIndex of the removed file
-        similarTrack = playlist.duplicates[index].inPlaylists[inPlaylistsIndex].similarTrack;
-        trackName = similarTrack == null ? playlist.duplicates[index].track.name : similarTrack.name;
-        trackId = similarTrack == null ? playlist.duplicates[index].track.id : similarTrack.id;
+        // Track removed from the foreign playlist using a pill icon
         basePlaylistIndex = playlist.duplicates[index].inPlaylists[inPlaylistsIndex].playlistIndex;
         basePlaylist = this.state.playlists[basePlaylistIndex];
-        trackIndex = this.state.playlists[basePlaylistIndex].duplicates.findIndex((duplicate) =>
+        trackIndex = this.state.playlists[basePlaylistIndex].duplicates.findIndex((duplicate) => // We must for location of track in dupes list (using track's original trackIndex)
           duplicate.trackIndex == playlist.duplicates[index].inPlaylists[inPlaylistsIndex].trackIndex
         );
+        trackToRemove = playlist.duplicates[index].inPlaylists[inPlaylistsIndex].trackToRemove;
 
       }
 
       // List occurences in foreign playlists
       let foreignPlaylistOccurences = basePlaylist.duplicates[trackIndex].inPlaylists.map((inPlaylist) => {
-        return `        ${inPlaylist.playlist.name} (${inPlaylist.playlist.id}) pos ${inPlaylist.trackIndex}` +
-          `${inPlaylist.similarTrack == null ? '' : '\n' + '          Similar ' + inPlaylist.similarTrack.name + ' (' + inPlaylist.similarTrack.id + ')'}`
+        return `        ${inPlaylist.playlist.name} (${inPlaylist.playlist.id}) pos ${inPlaylist.trackIndex} ${inPlaylist.reason == 'same-id' ? '' : '(similar: ' + inPlaylist.trackToRemove.id + ')'}`
       }).join('\n');
+
 
       // Log the delete
       console.log(`main.tsx:
-      Removing ${trackName} (${trackId})
-        Similar ${similarTrack == null ? '' : similarTrack.name + ' (' + similarTrack.id + ')'}
+      Removing ${trackToRemove.name} (${trackToRemove.id})
       From playlist ${basePlaylist.playlist.name} (${basePlaylist.playlist.id}) pos ${trackIndex}
       Duplicates  \n${foreignPlaylistOccurences} `)
 
