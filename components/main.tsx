@@ -83,8 +83,6 @@ export default class Main extends React.Component<{
   removeFromPlaylist = (playlist: PlaylistModel, index: number, inPlaylistsIndex: number) => {
     (async () => {
 
-
-
       let basePlaylistIndex: number;        // Location of basePlaylist in the playlist store
       let basePlaylist: PlaylistModel;      // Playlist to remove the track from
       let trackIndex: number;               // Location of track basePlaylist's duplicates list
@@ -107,10 +105,31 @@ export default class Main extends React.Component<{
 
       }
 
-      // List occurences in foreign playlists
+      /*
+      // List occurences in foreign playlists - WORKING
       let foreignPlaylistOccurences = basePlaylist.duplicates[trackIndex].inPlaylists.map((inPlaylist) => {
         return `        ${inPlaylist.playlist.name} (${inPlaylist.playlist.id}) pos ${inPlaylist.trackIndex} ${inPlaylist.reason == 'same-id' ? '' : '(similar: ' + inPlaylist.trackToRemove.id + ')'}`
       }).join('\n');
+
+      */
+
+
+
+      // List occurences in foreign playlists
+      let foreignPlaylistOccurences = '';
+      basePlaylist.duplicates[trackIndex].inPlaylists.forEach((inPlaylist) => {
+        foreignPlaylistOccurences += `        ${inPlaylist.playlist.name} (${inPlaylist.playlist.id}) pos ${inPlaylist.trackIndex} ${inPlaylist.reason == 'same-id' ? '\n' : '(similar: ' + inPlaylist.trackToRemove.id + ')\n'}`
+        // Remove track from inPlaylists list of all dupe playlists so pills will disappear
+        // FINSIH ME this.state.playlists[inPlaylist.playlistIndex].duplicates.pop[trackIndex];
+        // If the inPlaylsits list is empty, remove the track from the foreign dplicates list altogether
+      });
+
+
+
+      // Delete the track from the base playlist
+      this.state.playlists[basePlaylistIndex].duplicates.pop[trackIndex];
+
+      // UPDATE THE STORE
 
 
       // Log the delete
