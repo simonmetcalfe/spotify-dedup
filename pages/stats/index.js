@@ -4,7 +4,7 @@ import Header from '../../components/head';
 import Head from 'next/head';
 import { useState } from 'react';
 import { LineChart, BarChart } from 'react-chartkick';
-import 'chart.js';
+import 'chartkick/chart.js';
 
 import '../../i18n';
 
@@ -38,20 +38,23 @@ const LocationChart = ({ data }) => {
     return (
       <>
         <h2>Users by Location</h2>
-        <BarChart data={data} height={`${data.length * 16}px`} />
+        <BarChart data={data} height={`${data.length * 20}px`} />
       </>
     );
   } else {
     return (
       <>
         <h2>Users by Location (Top 20 countries/territories)</h2>
-        <BarChart data={data.slice(0, 20)} height={`${20 * 16}px`} />
+        <BarChart data={data.slice(0, 20)} height={`${20 * 20}px`} />
         <button onClick={() => setExpanded(true)}>See all locations</button>
       </>
     );
   }
 };
 export default function Stats({ data }) {
+  if (!data) {
+    return <div>Stats not available</div>;
+  }
   const maus = trimRightZeros(data.mau, (item) => item.number_of_maus);
   const daus = trimRightZeros(data.dau, (item) => item.number_of_daus);
   const total_requests = trimRightZeros(
@@ -89,8 +92,8 @@ export default function Stats({ data }) {
           <div className="row">
             <h1>Stats about Spotify Dedup</h1>
             <p>
-              This page lists shows open data about Spotify Dedup. The metrics
-              are gathered using{' '}
+              This page shows open data about Spotify Dedup. The metrics are
+              gathered using{' '}
               <a href="https://github.com/JMPerez/spotify-app-stats">
                 spotify-app-stats
               </a>

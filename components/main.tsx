@@ -1,6 +1,8 @@
 import React from 'react';
-import { useTranslation, Translation } from 'react-i18next';
+
+import { useTranslation, Translation, getI18n } from 'react-i18next';
 import { PlaylistModel, InPlaylistsModel } from '../dedup/types';
+
 import { SpotifyUserType, SpotifyTrackType } from '../dedup/spotifyApi';
 
 import Process from '../dedup/process';
@@ -51,6 +53,7 @@ type StateType = {
 export default class Main extends React.Component<{
   api: any;
   user: SpotifyUserType;
+  accessToken: string; //TODO: Was merged!
 }> {
   state: StateType = {
     toProcess: null,
@@ -72,6 +75,7 @@ export default class Main extends React.Component<{
     // Starts the process function inside of Process
     // Where does this.props come from?
     process.process(this.props.api, this.props.user);
+
   }
 
   // TODO:  id:string ??

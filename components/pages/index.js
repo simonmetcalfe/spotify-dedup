@@ -83,15 +83,12 @@ export default class Index extends React.Component {
     if (global['ga']) {
       global['ga']('send', 'event', 'spotify-dedup', 'user-logged-in');
     }
-    if (global['fbq']) {
-      global['fbq']('trackCustom', 'dedup-user-logged-in');
-    }
 
     Index.api = new SpotifyWebApi();
     Index.api.setAccessToken(accessToken);
 
     const user = await Index.api.getMe();
-    this.setState({ isLoggedIn: true, user });
+    this.setState({ isLoggedIn: true, user, accessToken });
   };
 
   render() {
@@ -101,7 +98,11 @@ export default class Index extends React.Component {
         <Header />
 
         {this.state.isLoggedIn ? (
-          <Main api={Index.api} user={this.state.user} />
+          <Main
+            api={Index.api}
+            user={this.state.user}
+            accessToken={this.state.accessToken}
+          />
         ) : (
             <Intro onLoginClick={this.handleLoginClick} />
           )}

@@ -129,13 +129,10 @@ export default class SpotifyWebApi {
           .join('&')}`;
 
     try {
-      const res = await fetch({
-        url: `${url}${optionsString}`,
-        options: {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${this.token}`,
-          },
+      const res = await fetch(`${url}${optionsString}`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${this.token}`,
         },
       });
       //console.log('spotifyApi.ts:  getGeneric returning with response ' + JSON.stringify(res))
@@ -189,18 +186,18 @@ export default class SpotifyWebApi {
     };
 
     console.log('spotifyApi.ts:  removeTracksFromPlaylist - the URI data to sent is ' + dataToBeSent)
-    const res = await fetch({
-      url: `${apiPrefix}/users/${encodeURIComponent(
+    const res = await fetch(
+      `${apiPrefix}/users/${encodeURIComponent(
         userId
       )}/playlists/${playlistId}/tracks`,
-      options: {
+      {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${this.token}`,
         },
         body: JSON.stringify(dataToBeSent),
-      },
-    });
+      }
+    );
     return parseAPIResponse(res);
   }
 
@@ -213,15 +210,12 @@ export default class SpotifyWebApi {
     for (let i = 0; i < trackIds.length; i++) {
       console.log('spotifyApi.ts:  removeFromMySavedTracks called with trackIds ' + trackIds[i])
     }
-    const res = await fetch({
-      url: `${apiPrefix}/me/tracks`,
-      options: {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${this.token}`,
-        },
-        body: JSON.stringify(trackIds),
+    const res = await fetch(`${apiPrefix}/me/tracks`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${this.token}`,
       },
+      body: JSON.stringify(trackIds),
     });
     return parseAPIResponse(res);
   }

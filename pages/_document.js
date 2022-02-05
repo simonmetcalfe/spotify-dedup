@@ -35,8 +35,8 @@ class MyDocument extends Document {
           />
           {include3rdPartyScripts && (
             <script
-              src="https://browser.sentry-cdn.com/5.21.1/bundle.min.js"
-              integrity="sha384-O8HdAJg1h8RARFowXd2J/r5fIWuinSBtjhwQoPesfVILeXzGpJxvyY/77OaPPXUo"
+              src="https://browser.sentry-cdn.com/5.29.2/bundle.min.js"
+              integrity="sha384-ir4+BihBClNpjZk3UKgHTr0cwRhujAjy/M5VEGvcOzjhM1Db79GAg9xLxYn4uVK4"
               crossOrigin="anonymous"
             ></script>
           )}
@@ -60,17 +60,6 @@ class MyDocument extends Document {
         })(window, document, 'script', 'ga');
         ga('create', 'UA-39254352-6');
         ga('send', 'pageview');
-
-        !function(f,b,e,v,n,t,s)
-        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-        n.queue=[];t=b.createElement(e);t.async=!0;
-        t.src=v;s=b.getElementsByTagName(e)[0];
-        s.parentNode.insertBefore(t,s)}(window, document,'script',
-        'https://connect.facebook.net/en_US/fbevents.js');
-        fbq('init', '828495194151239');
-        fbq('track', 'PageView');
 
         window.Sentry &&
         Sentry.init({ dsn: 'https://22cbac299caf4962b74de18bc87a8d74@o166353.ingest.sentry.io/1239123' });

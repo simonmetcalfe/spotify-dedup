@@ -1,40 +1,40 @@
 {
-  "name": "spotify-dedup",
-  "description": "Remove duplicates from your Spotify library",
-  "version": "2.0.0",
-  "repository": "git@github.com:JMPerez/spotify-dedup.git",
-  "author": "José M. Pérez <jperez@spotify.com>",
-  "license": "MIT",
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "export": "next export && touch ./out/.nojekyll",
-    "deploy": "yarn run build && yarn run export && node ./update-gh-pages.js",
-    "start": "next start",
-    "analyze": "BUNDLE_ANALYZE=browser next build"
-  },
-  "dependencies": {
-    "@fortawesome/fontawesome-svg-core": "^1.2.35",
-    "@fortawesome/free-solid-svg-icons": "^5.15.3",
-    "@fortawesome/react-fontawesome": "^0.1.14",
-    "@next/bundle-analyzer": "^10.0.0",
-    "@zeit/next-source-maps": "^0.0.3",
-    "chart.js": "^2.9.4",
-    "gh-pages": "^3.1.0",
-    "i18next": "^19.8.3",
-    "next": "10.0.0",
-    "next-i18next": "^6.0.3",
-    "react": "17.0.1",
-    "react-chartkick": "^0.4.1",
-    "react-dom": "17.0.1",
-    "react-i18next": "^11.7.3",
-    "spotify-app-stats": "^0.0.1",
-    "victory": "^35.3.1"
-  },
-  "devDependencies": {
-    "@types/node": "^14.14.5",
-    "@types/react": "^16.9.54",
-    "husky": "^4.3.0",
-    "typescript": "^4.0.5"
-  }
+    "name": "spotify-dedup",
+    "description": "Remove duplicates from your Spotify library",
+    "version": "2.0.0",
+    "repository": "git@github.com:JMPerez/spotify-dedup.git",
+    "author": "José M. Pérez <jperez@spotify.com>",
+    "license": "MIT",
+    "scripts": {
+        "dev": "next dev",
+        "build": "next build",
+        "export": "next export && touch ./out/.nojekyll",
+        "deploy": "yarn run build && yarn run export && node ./update-gh-pages.js",
+        "start": "next start",
+        "analyze": "BUNDLE_ANALYZE=browser next build"
+    },
+    "dependencies": {
+        "@fortawesome/fontawesome-svg-core": "^1.2.35",
+        "@fortawesome/free-solid-svg-icons": "^5.15.3",
+        "@fortawesome/react-fontawesome": "^0.1.14",
+        "@next/bundle-analyzer": "^10.2.0",
+        "@zeit/next-source-maps": "^0.0.3",
+        "chart.js": "^3.2.1",
+        "gh-pages": "^3.1.0",
+        "i18next": "^20.2.2",
+        "next": "10.2.0",
+        "next-i18next": "^8.2.0",
+        "react": "17.0.2",
+        "react-chartkick": "^0.5.1",
+        "react-dom": "17.0.2",
+        "react-i18next": "^11.8.15",
+        "spotify-app-stats": "^0.0.1",
+        "victory": "^35.6.2"
+    },
+    "devDependencies": {
+        "@types/node": "^15.0.2",
+        "@types/react": "^17.0.5",
+        "husky": "^6.0.0",
+        "typescript": "^4.2.4"
+    }
 }
