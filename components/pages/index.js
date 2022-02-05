@@ -104,8 +104,8 @@ export default class Index extends React.Component {
             accessToken={this.state.accessToken}
           />
         ) : (
-            <Intro onLoginClick={this.handleLoginClick} />
-          )}
+          <Intro onLoginClick={this.handleLoginClick} />
+        )}
         {this.state.isLoggedIn
           ? null
           : [<Features key={0} />, <Reviews key={1} />]}

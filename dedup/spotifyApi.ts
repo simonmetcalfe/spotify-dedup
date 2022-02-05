@@ -160,16 +160,16 @@ export default class SpotifyWebApi {
                   "position_ms": 30000
                 }`
 
-    const res = await fetch({
-      url: `${apiPrefix}/me/player/play`,
-      options: {
+    const res = await fetch(
+      `${apiPrefix}/me/player/play`,
+      {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${this.token}`,
         },
         body: `${body}`
       },
-    });
+    );
     return parseAPIResponse(res);
   }
 
