@@ -81,7 +81,19 @@ export default class Main extends React.Component<{
     process.process(this.props.api, this.props.user);
   }
 
+  saveFile(filename, data) {
+    const blob = new Blob([data], { type: 'text/csv' });
+    const elem = window.document.createElement('a');
+    elem.href = window.URL.createObjectURL(blob);
+    elem.download = filename;
+    document.body.appendChild(elem);
+    elem.click();
+    document.body.removeChild(elem);
+  }
 
+  saveState() {
+    this.saveFile('spotify-dedup-store.txt', JSON.stringify(this.state))
+  }
 
 
   // TODO:  id:string ??
@@ -275,7 +287,7 @@ export default class Main extends React.Component<{
         <BadgeRemove3
           label='Print state'
           reason=''
-          onRemove={() => console.log(this.state)}
+          onRemove={() => this.saveState()}
         />
 
         <Status toProcess={this.state.toProcess} />

@@ -22,7 +22,7 @@ const playlistToPlaylistModel = (
   playlist: SpotifyPlaylistType,
   index: number
 ): PlaylistModel => ({
-  index: index,
+  playlistIndex: index,
   playlist: playlist,
   duplicates: [],
   tracks: [],
