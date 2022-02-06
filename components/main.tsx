@@ -1,11 +1,12 @@
 import React from 'react';
 
 import { useTranslation, Translation, getI18n } from 'react-i18next';
-import { PlaylistModel, InPlaylistsModel } from '../dedup/types';
+import { PlaylistModel, InPlaylistsModel, PlaylistCsvExportModel, DuplicatesCsvExportModel } from '../dedup/types';
 
 import { SpotifyUserType, SpotifyTrackType } from '../dedup/spotifyApi';
 
 import Process from '../dedup/process';
+
 import { PlaylistDeduplicator, SavedTracksDeduplicator } from '../dedup/deduplicator';
 
 import BuyMeACoffee from './bmc';
@@ -18,6 +19,7 @@ import { BadgeRemove3 } from './badgeRemove3';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+import { CSVLink, CSVDownload } from "react-csv";
 
 const Status = ({ toProcess }) => {
   const { t } = useTranslation();
@@ -81,20 +83,55 @@ export default class Main extends React.Component<{
     process.process(this.props.api, this.props.user);
   }
 
-  saveFile(filename, data) {
-    const blob = new Blob([data], { type: 'text/csv' });
-    const elem = window.document.createElement('a');
-    elem.href = window.URL.createObjectURL(blob);
-    elem.download = filename;
-    document.body.appendChild(elem);
-    elem.click();
-    document.body.removeChild(elem);
+  getPlaylistsCsv() {
+    const csv: Array<PlaylistCsvExportModel> = [];
+    for (let i = 0; i < this.state.playlists.length; i++) {
+      for (let n = 0; n < this.state.playlists[i].tracks.length; n++) {
+        csv.push({
+          playlist_id: this.state.playlists[i].playlist.id,
+          playlist_name: this.state.playlists[i].playlist.name,
+          playlist_owner: this.state.playlists[i].playlist.owner.display_name,
+          track_id: this.state.playlists[i].tracks[n].id,
+          track_name: this.state.playlists[i].tracks[n].name,
+          track_artist: this.state.playlists[i].tracks[n].artists[0].name,
+          track_duration: this.state.playlists[i].tracks[n].duration_ms,
+        })
+      }
+    }
+    return csv;
   }
 
-  saveState() {
-    this.saveFile('spotify-dedup-store.txt', JSON.stringify(this.state))
-  }
+  getDuplicatesCsv() {
+    const csv: Array<DuplicatesCsvExportModel> = [];
+    for (let i = 0; i < this.state.playlists.length; i++) {
+      for (let n = 0; n < this.state.playlists[i].duplicates.length; n++) {
+        var inPlaylists = '';
+        var similarInPlaylists = '';
+        for (let o = 0; o < this.state.playlists[i].duplicates[n].inPlaylists.length; o++) {
+          if (this.state.playlists[i].duplicates[n].inPlaylists[o].reason === 'same-id') {
+            if (inPlaylists !== '') { inPlaylists += ',' }
+            inPlaylists += this.state.playlists[i].duplicates[n].inPlaylists[o].playlist.name
+          } else {
+            if (similarInPlaylists !== '') { similarInPlaylists += ',' }
+            similarInPlaylists += this.state.playlists[i].duplicates[n].inPlaylists[o].playlist.name
+          }
+        }
 
+        csv.push({
+          playlist_id: this.state.playlists[i].playlist.id,
+          playlist_name: this.state.playlists[i].playlist.name,
+          playlist_owner: this.state.playlists[i].playlist.owner.display_name,
+          track_id: this.state.playlists[i].duplicates[n].track.id,
+          track_name: this.state.playlists[i].duplicates[n].track.name,
+          track_artist: this.state.playlists[i].duplicates[n].track.artists[0].name,
+          track_duration: this.state.playlists[i].duplicates[n].track.duration_ms,
+          in_playlists: inPlaylists,
+          similar_in_playlists: similarInPlaylists
+        })
+      }
+    }
+    return csv;
+  }
 
   // TODO:  id:string ??
   playTrack = (id) => {
@@ -284,11 +321,50 @@ export default class Main extends React.Component<{
           theme="colored"
         />
 
-        <BadgeRemove3
-          label='Print state'
-          reason=''
-          onRemove={() => this.saveState()}
-        />
+        <CSVLink
+          headers={[
+            { label: 'playlist_id', key: 'playlist_id' },
+            { label: 'playlist_name', key: 'playlist_name' },
+            { label: 'playlist_owner', key: 'playlist_owner' },
+            { label: 'playlist_url', key: 'playlist_url' },
+            { label: 'track_id', key: 'track_id' },
+            { label: 'track_name', key: 'track_name' },
+            { label: 'track_artist', key: 'track_artist' },
+            { label: 'track_duration', key: 'track_duration' },
+            { label: 'track_url', key: 'track_url' }
+          ]}
+          data={this.getPlaylistsCsv()}
+          filename={"spotify-dedup-playlists.csv"}
+          className="btn btn-primary"
+          target="_blank"
+        >
+          Download Playlists CSV
+        </CSVLink>
+
+
+
+        <CSVLink
+          headers={[
+            //TODO - Don't duplicate the header map
+            { label: 'playlist_id', key: 'playlist_id' },
+            { label: 'playlist_name', key: 'playlist_name' },
+            { label: 'playlist_owner', key: 'playlist_owner' },
+            { label: 'playlist_url', key: 'playlist_url' },
+            { label: 'track_id', key: 'track_id' },
+            { label: 'track_name', key: 'track_name' },
+            { label: 'track_artist', key: 'track_artist' },
+            { label: 'track_duration', key: 'track_duration' },
+            { label: 'track_url', key: 'track_url' },
+            { label: 'in_playlists', key: 'in_playlists' },
+            { label: 'similar_in_playlists', key: 'similar_in_playlists' }
+          ]}
+          data={this.getDuplicatesCsv()}
+          filename={"spotify-dedup-duplicates.csv"}
+          className="btn btn-primary"
+          target="_blank"
+        >
+          Download Duplicates CSV
+        </CSVLink>
 
         <Status toProcess={this.state.toProcess} />
         <Panel>

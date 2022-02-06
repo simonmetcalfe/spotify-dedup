@@ -29,3 +29,30 @@ export type InPlaylistsModel = {
   playlist: SpotifyPlaylistType;
   trackToRemove: SpotifyTrackType; // If the track is not identical, store the similar track so we can delete it
 }
+
+
+export type PlaylistCsvExportModel = {
+  playlist_id: string;
+  playlist_name: string;
+  playlist_owner: string;
+  track_id: string;
+  track_name: string;
+  track_artist: string;
+  track_duration: number;
+};
+
+export type DuplicatesCsvExportModel = {
+  playlist_id: string;
+  playlist_name: string;
+  playlist_owner: string;
+  track_id: string;
+  track_name: string;
+  track_artist: string;
+  track_duration: number;
+  in_playlists: string;
+  similar_in_playlists: string;
+};
+
+// Removed
+// playlist_url: string;
+// track_url: string;
