@@ -86,8 +86,21 @@ export default class Main extends React.Component<{
 
   // TODO:  id:string ??
   playTrack = (id) => {
-    console.log('main.tsx:  playTrack playing ' + id)
-    this.props.api.previewTrack(id);
+    (async () => {
+      console.log('main.tsx:  playTrack playing ' + id)
+      try {
+        await this.props.api.previewTrack(id);
+      }
+      catch (e) {
+        toast.error('Could not play track.   Make sure you have a Premium subscription and try waking up Spotify by playing a track from the Spotify client.')
+        console.log('main.tsx:  playTrack failed to play track ' + id + '.  ' + e.message + ' ' + e.stack)
+        global['Raven'] &&
+          global['Raven'].captureMessage(
+            `Exception trying to play a track`,
+            {},
+          );
+      }
+    })();
   }
 
   removeFromPlaylist = (playlist: PlaylistModel, index: number, inPlaylistsIndex: number) => {
@@ -204,6 +217,7 @@ export default class Main extends React.Component<{
           playlistsCopy[index].status = 'process.items.removed'; // Status is 'Duplicates removed'
           this.setState({ ...this.state, playlists: [...playlistsCopy] }); // State is updated with the copy
         } catch (e) {
+          toast.error('Could not remove duplicates from playlist.  Check your internet connection.')
           global['Raven'] &&
             global['Raven'].captureMessage(
               `Exception trying to remove duplicates from playlist`,
