@@ -12,7 +12,11 @@ import BuyMeACoffee from './bmc';
 import Panel from './panel';
 import { DuplicateTrackList } from './duplicateTrackList';
 import { DuplicateTrackListItem } from './duplicateTrackListItem';
+import { Badge } from './badge';
 import { BadgeRemove3 } from './badgeRemove3';
+
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 const Status = ({ toProcess }) => {
@@ -75,8 +79,10 @@ export default class Main extends React.Component<{
     // Starts the process function inside of Process
     // Where does this.props come from?
     process.process(this.props.api, this.props.user);
-
   }
+
+
+
 
   // TODO:  id:string ??
   playTrack = (id) => {
@@ -86,8 +92,6 @@ export default class Main extends React.Component<{
 
   removeFromPlaylist = (playlist: PlaylistModel, index: number, inPlaylistsIndex: number) => {
     (async () => {
-
-
 
       let basePlaylistIndex: number;        // Location of basePlaylist in the playlist store
       let basePlaylist: PlaylistModel;      // Playlist to remove the track from
@@ -125,16 +129,10 @@ export default class Main extends React.Component<{
 
       // Check playlist is not starred or collaborative
       if (basePlaylist.playlist.id === 'starred') {
-        global['alert'] &&
-          global['alert'](
-            'It is not possible to delete duplicates from your Starred playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.'
-          );
+        toast.error('It is not possible to delete duplicates from your Starred playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.', {});
       }
       else if (basePlaylist.playlist.collaborative) {
-        global['alert'] &&
-          global['alert'](
-            'It is not possible to delete duplicates from a collaborative playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.'
-          );
+        toast.error('It is not possible to delete duplicates from a collaborative playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.', {});
       } else {
 
 
@@ -189,16 +187,10 @@ export default class Main extends React.Component<{
       const playlistModel = this.state.playlists[index];
       console.log('The duplicates for playlist ' + playlistModel.playlist.name + ' are ' + JSON.stringify(playlistModel.duplicates))
       if (playlistModel.playlist.id === 'starred') {
-        global['alert'] &&
-          global['alert'](
-            'It is not possible to delete duplicates from your Starred playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.'
-          );
+        toast.error('It is not possible to delete duplicates from your Starred playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.', {});
       }
       if (playlistModel.playlist.collaborative) {
-        global['alert'] &&
-          global['alert'](
-            'It is not possible to delete duplicates from a collaborative playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.'
-          );
+        toast.error('It is not possible to delete duplicates from a collaborative playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.', {});
       } else {
         try {
           console.log('PlaylistDeduplicator.removeDuplicates being called for ' + playlistModel.playlist.name)
@@ -252,12 +244,26 @@ export default class Main extends React.Component<{
           0
         ) // Commented because not working with saved tracks + this.state.savedTracks.duplicates.length; // and adds the number of saved tracks duplicates to the number
     return (
+
       <div>
+        <ToastContainer
+          position="bottom-right"
+          autoClose={5000}
+          hideProgressBar
+          newestOnTop={false}
+          pauseOnFocusLoss
+          closeOnClick
+          draggable
+          pauseOnHover
+          theme="colored"
+        />
+
         <BadgeRemove3
           label='Print state'
           reason=''
           onRemove={() => console.log(this.state)}
         />
+
         <Status toProcess={this.state.toProcess} />
         <Panel>
           {this.state.toProcess === null && (
@@ -307,7 +313,6 @@ export default class Main extends React.Component<{
               <Translation>
                 {(t) => t('process.status.complete.nodups.body')}
               </Translation>
-              <BuyMeACoffee />
             </span>
           )}
         </Panel>

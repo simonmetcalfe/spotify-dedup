@@ -5,11 +5,17 @@ import { faPlay } from "@fortawesome/free-solid-svg-icons";
 export const BadgePlay2 = (props: { onPlay: () => void }) => {
     return (
         <span>
-            <div onClick={props.onPlay} ><FontAwesomeIcon icon={faPlay} /></div>
+            {
+                <span className="all">
+                    <div>
+                        <span className="all play-button" onClick={props.onPlay} ><FontAwesomeIcon icon={faPlay} /></span>
+                    </div>
+                </span>
+            }
             <style jsx>
                 {`
           
-          span {
+          .all {
             color: #ffffff;
             background-color: #1db954;
             border-radius: 10px;
@@ -26,6 +32,16 @@ export const BadgePlay2 = (props: { onPlay: () => void }) => {
             white-space: nowrap;
             cursor: pointer;
           }
+          
+          .play-button {
+            color: #ffffff;
+            background-repeat: no-repeat;
+            background-size: 50% 50%;
+            background-position: center;
+            cursor: pointer;
+            padding: 0px;
+          }
+
         `}
             </style>
         </span>
