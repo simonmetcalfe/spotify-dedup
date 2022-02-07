@@ -5,7 +5,7 @@ import SpotifyWebApi, {
   SpotifyPlaylistTrackType,
   SpotifySavedTrackType,
 } from './spotifyApi';
-import { PlaylistModel, InPlaylistsModel } from './types';
+import { PlaylistModel, InPlaylistsModel, DuplicatesModel } from './types';
 
 class BaseDeduplicator {
   async removeDuplicates(model) {
@@ -16,7 +16,7 @@ class BaseDeduplicator {
     throw 'Not implemented';
   }
 
-  static findDuplicatedTracksInAllPlaylists(currentPlaylist: PlaylistModel, allPlaylists: Array<PlaylistModel>, savedTracks: Array<SpotifyTrackType>) {
+  static findDuplicatedTracksInAllPlaylists(currentPlaylist: PlaylistModel, allPlaylists: Array<PlaylistModel>, savedTracks: Array<DuplicatesModel>) {
     const result = currentPlaylist.tracks.reduce((duplicates, track, index) => {
       if (track === null) return duplicates;
       if (track.id === null) return duplicates;
@@ -50,23 +50,29 @@ class BaseDeduplicator {
         }
       });
 
-      /*
-      // Check if it is a liked song
-      savedTracks.forEach(function (savedTrackToCompare, savedTrackToCompareIndex) {
-        if (track.id === savedTrackToCompare.id) {
+      // Check if it is a liked song, and if so marked as liked + set inPlaylists for the liked song so it knows it is in a playlist
+      savedTracks.forEach(function (savedTrackToCompare) {
+        let isDuplicate = '';
+        if (track.id === savedTrackToCompare.track.id) {
+          isDuplicate = 'same-id';
+        }
+        else if (seenNameAndArtistKey === `${savedTrackToCompare.track.name}:${savedTrackToCompare.track.artists[0].name}`.toLowerCase()
+          && Math.abs(track.duration_ms - savedTrackToCompare.track.duration_ms) < 2000) {
+          isDuplicate = 'same-name-artist';
+        }
+        if (isDuplicate != '') {
+          // Tell track it is in the saved/liked list
           track.isLiked = true;
-          savedTrackToCompare.
+          // Tell saved/liked entry which playlist(s) it also appears in
+          savedTrackToCompare.inPlaylists.push({
+            trackIndex: index, // Index of the current track in its playlist
+            playlistIndex: currentPlaylist.playlistIndex, // The location of the playlist in the store
+            reason: isDuplicate,
+            playlist: currentPlaylist.playlist,
+            trackToRemove: track // Save the the track that needs to be removed, whether it be identical or similar
+          })
         }
       })
-      /*
-
-      /*
-      for (let i=0; i < savedTracks.length; i++){
-        if (track.id === savedTracks[i].id) {
-          track.isLiked = true;
-        }
-      }
-      */
 
       // Finally after iterating through all playlists, if track was found in 1 or more playlists (foundInPlaylists[] is not empty), add the duplicate
       if (foundInPlaylists.length > 0) {

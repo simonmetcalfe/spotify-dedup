@@ -1,7 +1,7 @@
 import { fetchUserOwnedPlaylists } from './library';
 import { PlaylistDeduplicator, SavedTracksDeduplicator } from './deduplicator';
 import PlaylistCache from './playlistCache';
-import { PlaylistModel } from './types';
+import { PlaylistModel, DuplicatesModel } from './types';
 import SpotifyWebApi, {
   SpotifyUserType,
   SpotifyPlaylistType,
@@ -31,20 +31,18 @@ const playlistToPlaylistModel = (
   downloaded: false, // Added because we are handling downloading separately
 });
 
-/*
-const trackToModel = (
+
+// Concerts the SpotifyTrackType we receive from getTracks (saved tracks) into the DuplicatesModel
+// We manage the entire saved/liked songs library within the duplicates model - they are only removed if unliked
+const spotifyTrackTypeToDuplicatesModel = (
   track: SpotifyTrackType,
   index: number
-): PlaylistModel => ({
-  playlistIndex: index,
-  playlist: playlist,
-  duplicates: [],
-  tracks: [],
-  status: '',
-  processed: false,
-  downloaded: false, // Added because we are handling downloading separately
+): DuplicatesModel => ({
+  trackIndex: index,
+  track: track,
+  inPlaylists: []
 });
-*/
+
 
 
 export default class {
@@ -70,7 +68,7 @@ export default class {
     const currentState: {
       playlists?: Array<PlaylistModel>;
       savedTracks?: {
-        duplicates?: Array<any>; // We consider all liked songs a 'duplicate' unless they are unliked
+        duplicates?: Array<DuplicatesModel>; // We consider all liked songs a 'duplicate' unless they are unliked
       };
       toProcess?: number;
       toDownload?: number;
@@ -101,7 +99,7 @@ export default class {
       for (const playlistModel of currentState.playlists) {
         //console.log('process.ts:  process func about to find duplicate tracks  ' + playlistModel.playlist.name)
         sleep(1).then(() => {
-          playlistModel.duplicates = PlaylistDeduplicator.findDuplicatedTracksInAllPlaylists(playlistModel, currentState.playlists, currentState.savedTracks.saved);
+          playlistModel.duplicates = PlaylistDeduplicator.findDuplicatedTracksInAllPlaylists(playlistModel, currentState.playlists, currentState.savedTracks.duplicates);
           onPlaylistProcessed(playlistModel);
           // console.log('process.ts:  Contents of playlistModel.duplicates for ' + playlistModel.playlist.name + ' is ' + JSON.stringify(playlistModel.duplicates))
         })
@@ -153,14 +151,9 @@ export default class {
       );
       currentState.toDownload--; // Decriment when the saved tracks have been downloaded
 
-      // currentState.savedTracks.duplicates NEED A MODEL CONVERTER TO INSTANTLY TURN LIKED TO DUPLICATES
-
-      // NEED TO MOVE THIS CODE
-      /*
-      currentState.savedTracks.duplicates = SavedTracksDeduplicator.findDuplicatedTracks(
-        savedTracks
+      currentState.savedTracks.duplicates = savedTracks.map((playlist, index) => // Migrate saved tracks to the duplicates model
+        spotifyTrackTypeToDuplicatesModel(playlist, index)
       );
-        */
 
       this.dispatch('updateState', currentState);
 

@@ -493,7 +493,7 @@ export default class Main extends React.Component<{
                               trackArtistName={duplicate.track.artists[0].name}
                               thisPlaylistName={playlist.playlist.name}
                               inPlaylists={duplicate.inPlaylists}
-                              isLiked={true}
+                              isLiked={duplicate.track.isLiked}
                               onPlay={() => this.playTrack(duplicate.track.id)}
                               onLiked={(likedCurrentStatus) => this.toggleLiked(duplicate.track.id, likedCurrentStatus)}
                               onRemove={(inPlaylistsIndex) => this.removeFromPlaylist(playlist, index, inPlaylistsIndex)}
