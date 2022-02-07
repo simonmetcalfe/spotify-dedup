@@ -2,8 +2,9 @@ import React from 'react';
 import { useTranslation, Trans } from 'react-i18next';
 import { BadgePlay2 } from './badgePlay2';
 import { BadgeRemove3 } from './badgeRemove3';
+import { BadgeLiked } from './badgeLiked';
 
-export const DuplicateTrackListItem = (props: { key, trackName, trackArtistName, thisPlaylistName, inPlaylists, onPlay: () => void, onRemove: (inPlaylistsIndex) => void }) => {
+export const DuplicateTrackListItem = (props: { key, trackName, trackArtistName, thisPlaylistName, inPlaylists, isLiked, onPlay: () => void, onLiked: (likedCurrentStatus) => void, onRemove: (inPlaylistsIndex) => void }) => {
   // TODO: Translations are breaking the component, fix them later
   /*const { t, i18n } = useTranslation();*/
 
@@ -11,6 +12,10 @@ export const DuplicateTrackListItem = (props: { key, trackName, trackArtistName,
     <li>
       <BadgePlay2
         onPlay={() => props.onPlay()}
+      />
+      <BadgeLiked
+        onClick={() => props.onLiked(props.isLiked)}
+        isLiked={props.isLiked}
       />
       {/* <Trans i18nKey="result.duplicate.track"> */}
       <span>{props.trackName}</span> <span className="gray">by</span>{' '}

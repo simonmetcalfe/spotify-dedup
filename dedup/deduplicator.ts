@@ -16,7 +16,7 @@ class BaseDeduplicator {
     throw 'Not implemented';
   }
 
-  static findDuplicatedTracksInAllPlaylists(currentPlaylist: PlaylistModel, allPlaylists: Array<PlaylistModel>) {
+  static findDuplicatedTracksInAllPlaylists(currentPlaylist: PlaylistModel, allPlaylists: Array<PlaylistModel>, savedTracks: Array<SpotifyTrackType>) {
     const result = currentPlaylist.tracks.reduce((duplicates, track, index) => {
       if (track === null) return duplicates;
       if (track.id === null) return duplicates;
@@ -49,6 +49,24 @@ class BaseDeduplicator {
           });
         }
       });
+
+      /*
+      // Check if it is a liked song
+      savedTracks.forEach(function (savedTrackToCompare, savedTrackToCompareIndex) {
+        if (track.id === savedTrackToCompare.id) {
+          track.isLiked = true;
+          savedTrackToCompare.
+        }
+      })
+      /*
+
+      /*
+      for (let i=0; i < savedTracks.length; i++){
+        if (track.id === savedTracks[i].id) {
+          track.isLiked = true;
+        }
+      }
+      */
 
       // Finally after iterating through all playlists, if track was found in 1 or more playlists (foundInPlaylists[] is not empty), add the duplicate
       if (foundInPlaylists.length > 0) {
@@ -268,6 +286,10 @@ export class SavedTracksDeduplicator extends BaseDeduplicator {
               tracks.push(item.track);
             });
           });
+
+          for (let i = 0; i < tracks.length; i++) {
+            console.log('deduplicator.ts:  getTracks for SAVED TRACKS got track ' + tracks[i].name)
+          }
           resolve(tracks);
         })
         .catch((e) => {

@@ -8,17 +8,19 @@ import { ReactElement } from 'react';
 export type PlaylistModel = {
   playlistIndex: number; // The location of this playlist in the playlists store
   playlist: SpotifyPlaylistType;
-  duplicates: Array<{
-    trackIndex: number;
-    //reason: string;  // An reason is required for each occurance in another playlist, hence reason is moved to the Playlists array
-    track: SpotifyTrackType;
-    inPlaylists: Array<InPlaylistsModel>;
-  }>;
+  duplicates: Array<DuplicatesModel>;
   tracks: Array<SpotifyTrackType>; // Additional array as we now need to store the unprocessed tracks inside so they can be processed later on
   status: string;
   processed: boolean;
   downloaded: boolean; // New status because we are downloading and processing separately
 };
+
+export type DuplicatesModel = {
+  trackIndex: number;
+  //reason: string;  // An reason is required for each occurance in another playlist, hence reason is moved to the Playlists array
+  track: SpotifyTrackType;
+  inPlaylists: Array<InPlaylistsModel>;
+}
 
 // New model for storing a list of the playlists that the track can be found it
 // We save the reason, whether it is 'same-id' or 'same-name-artist'

@@ -13,6 +13,7 @@ export type SpotifyTrackType = {
   linked_from: SpotifyTrackType;
   name: string;
   uri: string;
+  isLiked: boolean;
   // TODO:  Do we need the location in the playlist 
   // in_playlists?: Array<{ url: SpotifyPlaylistType }>; // Originally planned to store inPlaylists within the track, now it is in the PlaylistModel 
 };

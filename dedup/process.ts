@@ -31,6 +31,22 @@ const playlistToPlaylistModel = (
   downloaded: false, // Added because we are handling downloading separately
 });
 
+/*
+const trackToModel = (
+  track: SpotifyTrackType,
+  index: number
+): PlaylistModel => ({
+  playlistIndex: index,
+  playlist: playlist,
+  duplicates: [],
+  tracks: [],
+  status: '',
+  processed: false,
+  downloaded: false, // Added because we are handling downloading separately
+});
+*/
+
+
 export default class {
   listeners: {};
   constructor() {
@@ -54,7 +70,7 @@ export default class {
     const currentState: {
       playlists?: Array<PlaylistModel>;
       savedTracks?: {
-        duplicates?: Array<any>;
+        duplicates?: Array<any>; // We consider all liked songs a 'duplicate' unless they are unliked
       };
       toProcess?: number;
       toDownload?: number;
@@ -85,7 +101,7 @@ export default class {
       for (const playlistModel of currentState.playlists) {
         //console.log('process.ts:  process func about to find duplicate tracks  ' + playlistModel.playlist.name)
         sleep(1).then(() => {
-          playlistModel.duplicates = PlaylistDeduplicator.findDuplicatedTracksInAllPlaylists(playlistModel, currentState.playlists);
+          playlistModel.duplicates = PlaylistDeduplicator.findDuplicatedTracksInAllPlaylists(playlistModel, currentState.playlists, currentState.savedTracks.saved);
           onPlaylistProcessed(playlistModel);
           // console.log('process.ts:  Contents of playlistModel.duplicates for ' + playlistModel.playlist.name + ' is ' + JSON.stringify(playlistModel.duplicates))
         })
@@ -126,24 +142,25 @@ export default class {
       //TODO:   Remove hacky speedup for a large Spotify account - TESTING ONLY
       //currentState.playlists.length = 50;
 
-      currentState.toDownload = currentState.playlists.length // WARNING add + 1 again if enabling saved tracks 
-      currentState.toProcess = currentState.playlists.length // WARNING add + 1 again if enabling saved tracks 
+      currentState.toDownload = currentState.playlists.length + 1 // +1 accounts for processing liked tracks 
+      currentState.toProcess = currentState.playlists.length + 0 // +1 accounts for processing liked tracks  
       currentState.savedTracks = {};
 
-      // TODO:  Remove this if we decide we don't want to get and process saved tracks
+      // Get saved tracks
       const savedTracks = await SavedTracksDeduplicator.getTracks(
         api,
         api.getMySavedTracks({ limit: 50 })
       );
+      currentState.toDownload--; // Decriment when the saved tracks have been downloaded
 
-      // Instead of de-duplication, this could be used to allow the user to add or remove any track from their saved tracks
+      // currentState.savedTracks.duplicates NEED A MODEL CONVERTER TO INSTANTLY TURN LIKED TO DUPLICATES
+
+      // NEED TO MOVE THIS CODE
       /*
       currentState.savedTracks.duplicates = SavedTracksDeduplicator.findDuplicatedTracks(
         savedTracks
       );
-      currentState.toDownload--;  // WARNING Only needed if we are including saved tracks in the count, and if enabling MUST add + 1 to value above
- 
-      */
+        */
 
       this.dispatch('updateState', currentState);
 

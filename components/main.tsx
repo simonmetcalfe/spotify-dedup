@@ -14,7 +14,6 @@ import Panel from './panel';
 import { DuplicateTrackList } from './duplicateTrackList';
 import { DuplicateTrackListItem } from './duplicateTrackListItem';
 import { Badge } from './badge';
-import { BadgeRemove3 } from './badgeRemove3';
 
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -133,6 +132,21 @@ export default class Main extends React.Component<{
     return csv;
   }
 
+  saveFile(filename, data) {
+    const blob = new Blob([data], { type: 'text/csv' });
+    const elem = window.document.createElement('a');
+    elem.href = window.URL.createObjectURL(blob);
+    elem.download = filename;
+    document.body.appendChild(elem);
+    elem.click();
+    document.body.removeChild(elem);
+  }
+
+  saveState() {
+    this.saveFile('spotify-dedup-store.txt', JSON.stringify(this.state))
+  }
+
+
   // TODO:  id:string ??
   playTrack = (id) => {
     (async () => {
@@ -141,7 +155,7 @@ export default class Main extends React.Component<{
         await this.props.api.previewTrack(id);
       }
       catch (e) {
-        toast.error('Could not play track.   Make sure you have a Premium subscription and try waking up Spotify by playing a track from the Spotify client.')
+        toast.warn('Could not play track.   Make sure you have a Premium subscription and try waking up Spotify by playing a track from the Spotify client.')
         console.log('main.tsx:  playTrack failed to play track ' + id + '.  ' + e.message + ' ' + e.stack)
         global['Raven'] &&
           global['Raven'].captureMessage(
@@ -152,12 +166,16 @@ export default class Main extends React.Component<{
     })();
   }
 
+  toggleLiked(id, likedCurrentStatus) {
+    console.log('main.tsx:  toggleLiked pressed for ' + id + ' with Liked current status as ' + likedCurrentStatus)
+  }
+
   removeFromPlaylist = (playlist: PlaylistModel, index: number, inPlaylistsIndex: number) => {
     (async () => {
 
       let basePlaylistIndex: number;        // Location of basePlaylist in the playlist store
       let basePlaylist: PlaylistModel;      // Playlist to remove the track from
-      let trackIndex: number;               // Location of track basePlaylist's duplicates list
+      let trackIndex: number;               // Location of track in basePlaylist's duplicates list
       let trackToRemove: SpotifyTrackType;  // Track to be removed from Spotify
 
       if (inPlaylistsIndex == null) {
@@ -191,10 +209,10 @@ export default class Main extends React.Component<{
 
       // Check playlist is not starred or collaborative
       if (basePlaylist.playlist.id === 'starred') {
-        toast.error('It is not possible to delete duplicates from your Starred playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.', {});
+        toast.warn('It is not possible to delete duplicates from your Starred playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.', {});
       }
       else if (basePlaylist.playlist.collaborative) {
-        toast.error('It is not possible to delete duplicates from a collaborative playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.', {});
+        toast.warn('It is not possible to delete duplicates from a collaborative playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.', {});
       } else {
 
 
@@ -249,10 +267,10 @@ export default class Main extends React.Component<{
       const playlistModel = this.state.playlists[index];
       console.log('The duplicates for playlist ' + playlistModel.playlist.name + ' are ' + JSON.stringify(playlistModel.duplicates))
       if (playlistModel.playlist.id === 'starred') {
-        toast.error('It is not possible to delete duplicates from your Starred playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.', {});
+        toast.warn('It is not possible to delete duplicates from your Starred playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.', {});
       }
       if (playlistModel.playlist.collaborative) {
-        toast.error('It is not possible to delete duplicates from a collaborative playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.', {});
+        toast.warn('It is not possible to delete duplicates from a collaborative playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.', {});
       } else {
         try {
           console.log('PlaylistDeduplicator.removeDuplicates being called for ' + playlistModel.playlist.name)
@@ -266,7 +284,7 @@ export default class Main extends React.Component<{
           playlistsCopy[index].status = 'process.items.removed'; // Status is 'Duplicates removed'
           this.setState({ ...this.state, playlists: [...playlistsCopy] }); // State is updated with the copy
         } catch (e) {
-          toast.error('Could not remove duplicates from playlist.  Check your internet connection.')
+          toast.error('Could not remove duplicates from playlist.  Check your internet connection and reload the page if necessary.')
           global['Raven'] &&
             global['Raven'].captureMessage(
               `Exception trying to remove duplicates from playlist`,
@@ -340,9 +358,6 @@ export default class Main extends React.Component<{
         >
           Download Playlists CSV
         </CSVLink>
-
-
-
         <CSVLink
           headers={[
             //TODO - Don't duplicate the header map
@@ -365,6 +380,10 @@ export default class Main extends React.Component<{
         >
           Download Duplicates CSV
         </CSVLink>
+
+        <button onClick={() => this.saveState()}>
+          Print state
+        </button>
 
         <Status toProcess={this.state.toProcess} />
         <Panel>
@@ -474,7 +493,9 @@ export default class Main extends React.Component<{
                               trackArtistName={duplicate.track.artists[0].name}
                               thisPlaylistName={playlist.playlist.name}
                               inPlaylists={duplicate.inPlaylists}
+                              isLiked={true}
                               onPlay={() => this.playTrack(duplicate.track.id)}
+                              onLiked={(likedCurrentStatus) => this.toggleLiked(duplicate.track.id, likedCurrentStatus)}
                               onRemove={(inPlaylistsIndex) => this.removeFromPlaylist(playlist, index, inPlaylistsIndex)}
                             />
                           </span>
