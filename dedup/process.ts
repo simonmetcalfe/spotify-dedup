@@ -1,7 +1,7 @@
 import { fetchUserOwnedPlaylists } from './library';
 import { PlaylistDeduplicator, SavedTracksDeduplicator } from './deduplicator';
 import PlaylistCache from './playlistCache';
-import { PlaylistModel, DuplicatesModel } from './types';
+import { PlaylistModel, DuplicatesModel, InPlaylistsModel } from './types';
 import SpotifyWebApi, {
   SpotifyUserType,
   SpotifyPlaylistType,
@@ -24,8 +24,8 @@ const playlistToPlaylistModel = (
 ): PlaylistModel => ({
   playlistIndex: index,
   playlist: playlist,
-  duplicates: [],
-  tracks: [],
+  duplicates: new Array<DuplicatesModel>(),
+  tracks: new Array<SpotifyTrackType>(),
   status: '',
   processed: false,
   downloaded: false, // Added because we are handling downloading separately
@@ -40,7 +40,7 @@ const spotifyTrackTypeToDuplicatesModel = (
 ): DuplicatesModel => ({
   trackIndex: index,
   track: track,
-  inPlaylists: []
+  inPlaylists: new Array<InPlaylistsModel>()
 });
 
 
@@ -66,12 +66,14 @@ export default class {
     console.log('process.ts:  process async running')
     // const is used to fix the model of currentState, but each object inside is modifyable
     const currentState: {
-      playlists?: Array<PlaylistModel>;
-      savedTracks?: {
-        duplicates?: Array<DuplicatesModel>; // We consider all liked songs a 'duplicate' unless they are unliked
-      };
       toProcess?: number;
       toDownload?: number;
+      playlists?: Array<PlaylistModel>;
+      savedTracks?: {
+        status?: string; //TODO: Not sure if this is used, but it exists in the model in main.tsx
+        duplicates?: Array<DuplicatesModel>; // We consider all liked songs a 'duplicate' even if they don't appear in playlists
+      };
+
     } = {};
 
     const dispatch = this.dispatch.bind(this);
@@ -140,8 +142,8 @@ export default class {
       //TODO:   Remove hacky speedup for a large Spotify account - TESTING ONLY
       //currentState.playlists.length = 50;
 
-      currentState.toDownload = currentState.playlists.length + 1 // +1 accounts for processing liked tracks 
-      currentState.toProcess = currentState.playlists.length + 0 // +1 accounts for processing liked tracks  
+      currentState.toDownload = currentState.playlists.length + 1 // +1 accounts for downloading liked tracks 
+      currentState.toProcess = currentState.playlists.length + 1
       currentState.savedTracks = {};
 
       // Get saved tracks
@@ -151,9 +153,10 @@ export default class {
       );
       currentState.toDownload--; // Decriment when the saved tracks have been downloaded
 
-      currentState.savedTracks.duplicates = savedTracks.map((playlist, index) => // Migrate saved tracks to the duplicates model
+      currentState.savedTracks.duplicates = savedTracks.map((playlist, index) => // Migrate saved tracks to the duplicates model without processing
         spotifyTrackTypeToDuplicatesModel(playlist, index)
       );
+      currentState.toProcess--;
 
       this.dispatch('updateState', currentState);
 

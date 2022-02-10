@@ -21,20 +21,34 @@ export const DuplicateTrackListItem = (props: { key, trackName, trackArtistName,
       <span>{props.trackName}</span> <span className="gray">by</span>{' '}
       <span>{props.trackArtistName}</span>
       {/* </Trans> */}
-      <BadgeRemove3
-        label={props.thisPlaylistName}
-        reason=''
-        onRemove={() => props.onRemove(null)}
-      />
-      {props.inPlaylists.map((inPlaylist, index) => (
-        <span key={index}>
-          <BadgeRemove3
-            label={inPlaylist.playlist.name}
-            reason={inPlaylist.reason}
-            onRemove={() => props.onRemove(index)}
-          />
-        </span>
-      ))}
+      {
+        props.thisPlaylistName !== '' ?  // This is a playlist and not the saved/liked songs list
+          <span>
+            <BadgeRemove3
+              label={props.thisPlaylistName}
+              reason=''
+              onRemove={() => props.onRemove(null)}
+            />
+          </span>
+          :
+          <span></span> //TODO - We only show the remove from own playlist badge when it is a playlist, but there must be a better way of doing this
+      }
+      {
+        props.inPlaylists != undefined ?
+          props.inPlaylists.map((inPlaylist, index) => (
+            <span key={index}>
+              <BadgeRemove3
+                label={inPlaylist.playlist.name}
+                reason={inPlaylist.reason}
+                onRemove={() => props.onRemove(index)}
+              />
+            </span>
+          ))
+
+          :
+          <span></span> //TODO - Same as above
+
+      }
 
       <style jsx>
         {`

@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { useTranslation, Translation, getI18n } from 'react-i18next';
-import { PlaylistModel, InPlaylistsModel, PlaylistCsvExportModel, DuplicatesCsvExportModel } from '../dedup/types';
+import { PlaylistModel, DuplicatesModel, PlaylistCsvExportModel, DuplicatesCsvExportModel } from '../dedup/types';
 
 import { SpotifyUserType, SpotifyTrackType } from '../dedup/spotifyApi';
 
@@ -47,18 +47,14 @@ type StateType = {
   playlists: Array<PlaylistModel>;
   savedTracks: {
     status?: string;
-    duplicates: Array<{
-      index: number;
-      reason: string;
-      track: SpotifyTrackType;
-    }>;
+    duplicates: Array<DuplicatesModel>;
   };
 };
 
 export default class Main extends React.Component<{
   api: any;
   user: SpotifyUserType;
-  accessToken: string; //TODO: Was merged!
+  accessToken: string;
 }> {
   state: StateType = {
     toProcess: null,
@@ -84,6 +80,20 @@ export default class Main extends React.Component<{
 
   getPlaylistsCsv() {
     const csv: Array<PlaylistCsvExportModel> = [];
+    // Saved/liked
+    for (let i = 0; i < this.state.savedTracks.duplicates.length; i++) {
+      csv.push({
+        playlist_id: 'liked',
+        playlist_name: 'liked',
+        playlist_owner: this.props.user.display_name,
+        track_id: this.state.savedTracks.duplicates[i].track.id,
+        track_name: this.state.savedTracks.duplicates[i].track.name,
+        liked: true,
+        track_artist: this.state.savedTracks.duplicates[i].track.artists[0].name,
+        track_duration: this.state.savedTracks.duplicates[i].track.duration_ms,
+      })
+    }
+    // Playlists
     for (let i = 0; i < this.state.playlists.length; i++) {
       for (let n = 0; n < this.state.playlists[i].tracks.length; n++) {
         csv.push({
@@ -92,6 +102,7 @@ export default class Main extends React.Component<{
           playlist_owner: this.state.playlists[i].playlist.owner.display_name,
           track_id: this.state.playlists[i].tracks[n].id,
           track_name: this.state.playlists[i].tracks[n].name,
+          liked: this.state.playlists[i].tracks[n].isLiked,
           track_artist: this.state.playlists[i].tracks[n].artists[0].name,
           track_duration: this.state.playlists[i].tracks[n].duration_ms,
         })
@@ -102,6 +113,34 @@ export default class Main extends React.Component<{
 
   getDuplicatesCsv() {
     const csv: Array<DuplicatesCsvExportModel> = [];
+    // Saved/liked (NOTE:  Exports all tracks and not just those which are 'duplicated' in playlists)
+    for (let i = 0; i < this.state.savedTracks.duplicates.length; i++) {
+      var inPlaylists = '';
+      var similarInPlaylists = '';
+      for (let o = 0; o < this.state.savedTracks.duplicates[i].inPlaylists.length; o++) {
+        if (this.state.savedTracks.duplicates[i].inPlaylists[o].reason === 'same-id') {
+          if (inPlaylists !== '') { inPlaylists += ',' }
+          inPlaylists += this.state.savedTracks.duplicates[i].inPlaylists[o].playlist.name
+        } else {
+          if (similarInPlaylists !== '') { similarInPlaylists += ',' }
+          similarInPlaylists += this.state.savedTracks.duplicates[i].inPlaylists[o].playlist.name
+        }
+
+        csv.push({
+          playlist_id: 'liked',
+          playlist_name: 'liked',
+          playlist_owner: this.props.user.display_name,
+          track_id: this.state.savedTracks.duplicates[i].track.id,
+          track_name: this.state.savedTracks.duplicates[i].track.name,
+          liked: true,
+          track_artist: this.state.savedTracks.duplicates[i].track.artists[0].name,
+          track_duration: this.state.savedTracks.duplicates[i].track.duration_ms,
+          in_playlists: inPlaylists,
+          similar_in_playlists: similarInPlaylists
+        })
+      }
+    }
+    // Playlists
     for (let i = 0; i < this.state.playlists.length; i++) {
       for (let n = 0; n < this.state.playlists[i].duplicates.length; n++) {
         var inPlaylists = '';
@@ -122,6 +161,7 @@ export default class Main extends React.Component<{
           playlist_owner: this.state.playlists[i].playlist.owner.display_name,
           track_id: this.state.playlists[i].duplicates[n].track.id,
           track_name: this.state.playlists[i].duplicates[n].track.name,
+          liked: this.state.playlists[i].duplicates[n].track.isLiked,
           track_artist: this.state.playlists[i].duplicates[n].track.artists[0].name,
           track_duration: this.state.playlists[i].duplicates[n].track.duration_ms,
           in_playlists: inPlaylists,
@@ -299,23 +339,6 @@ export default class Main extends React.Component<{
     })();
   };
 
-  removeDuplicatesInSavedTracks() {
-    (async () => {
-      await SavedTracksDeduplicator.removeDuplicates(
-        this.props.api,
-        this.state.savedTracks
-      );
-      this.setState({
-        ...this.state,
-        savedTracks: {
-          duplicates: [],
-          status: 'process.items.removed',
-        },
-      });
-
-    })();
-  }
-
   render() {
     const totalDuplicates = //totalDuplicats will either be 0 or the result of the reduce function
       this.state.playlists.length === 0
@@ -344,12 +367,13 @@ export default class Main extends React.Component<{
             { label: 'playlist_id', key: 'playlist_id' },
             { label: 'playlist_name', key: 'playlist_name' },
             { label: 'playlist_owner', key: 'playlist_owner' },
-            { label: 'playlist_url', key: 'playlist_url' },
+            //{ label: 'playlist_url', key: 'playlist_url' },
             { label: 'track_id', key: 'track_id' },
             { label: 'track_name', key: 'track_name' },
+            { label: 'liked', key: 'liked' },
             { label: 'track_artist', key: 'track_artist' },
             { label: 'track_duration', key: 'track_duration' },
-            { label: 'track_url', key: 'track_url' }
+            //{ label: 'track_url', key: 'track_url' }
           ]}
           data={this.getPlaylistsCsv()}
           filename={"spotify-dedup-playlists.csv"}
@@ -364,12 +388,13 @@ export default class Main extends React.Component<{
             { label: 'playlist_id', key: 'playlist_id' },
             { label: 'playlist_name', key: 'playlist_name' },
             { label: 'playlist_owner', key: 'playlist_owner' },
-            { label: 'playlist_url', key: 'playlist_url' },
+            //{ label: 'playlist_url', key: 'playlist_url' },
             { label: 'track_id', key: 'track_id' },
             { label: 'track_name', key: 'track_name' },
+            { label: 'liked', key: 'liked' },
             { label: 'track_artist', key: 'track_artist' },
             { label: 'track_duration', key: 'track_duration' },
-            { label: 'track_url', key: 'track_url' },
+            // { label: 'track_url', key: 'track_url' },
             { label: 'in_playlists', key: 'in_playlists' },
             { label: 'similar_in_playlists', key: 'similar_in_playlists' }
           ]}
@@ -439,6 +464,68 @@ export default class Main extends React.Component<{
         </Panel>
 
         <ul className="playlists-list">
+          {/* LIKED/SAVED TRACKS */}
+
+          {(this.state.toProcess === 0 && this.state.savedTracks.duplicates.length ||
+            this.state.savedTracks.status) && (
+              <li className="playlists-list-item media">
+                <div className="img">
+                  <img
+                    width="100"
+                    height="100"
+                    className="playlists-list-item__img"
+                    src={'./placeholder.png'}
+                  />
+                </div>
+                <div className="bd">
+                  <span className="playlists-list-item__name">
+                    <Translation>{(t) => t('process.saved.title')}</Translation>
+                  </span>
+                  {this.state.savedTracks.status && (
+                    <Badge>
+                      <Translation>
+                        {(t) => t(this.state.savedTracks.status)}
+                      </Translation>
+                    </Badge>
+                  )}
+                  {this.state.savedTracks.duplicates.length != 0 && (
+                    <span>
+                      <span>
+                        <Translation>
+                          {(t) =>
+                            t('process.saved.duplicates', {
+                              count: this.state.savedTracks.duplicates.length,
+                            })
+                          }
+                        </Translation>
+                      </span>
+                      <DuplicateTrackList>
+                        {this.state.savedTracks.duplicates.map((duplicate, index) => (
+                          <span key={index}>
+                            <DuplicateTrackListItem
+                              key={index}
+                              trackName={duplicate.track.name}
+                              trackArtistName={duplicate.track.artists[0].name}
+                              thisPlaylistName={''}
+                              inPlaylists={duplicate.inPlaylists}
+                              isLiked={true}
+                              onPlay={() => this.playTrack(duplicate.track.id)}
+                              onLiked={(likedCurrentStatus) => this.toggleLiked(duplicate.track.id, likedCurrentStatus)}
+                              onRemove={(inPlaylistsIndex) => this.removeFromPlaylist(null, null, inPlaylistsIndex)} // TODO:  Needs review - for liked/saved songs the pills only remove them from a foreign playlist
+                            />
+                          </span>
+                        ))}
+                      </DuplicateTrackList>
+                    </span>
+                  )}
+                </div>
+              </li>
+            )}
+
+
+
+
+          {/* PLAYLISTS */}
 
           {this.state.toProcess === 0 && this.state.playlists
             .filter((p) => p.duplicates.length || p.status != '')
