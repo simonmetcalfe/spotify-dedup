@@ -186,6 +186,8 @@ export class PlaylistDeduplicator extends BaseDeduplicator {
     });
   }
 
+  // TODO:  THIS IS AN ENTIRELY NEW UNFINISHED FUNCTION!  REVIEW AND FIX OR DELETE
+
   static async removeTrack(
     api: SpotifyWebApi,
     uri: string,
@@ -216,6 +218,7 @@ export class PlaylistDeduplicator extends BaseDeduplicator {
     })
   }
 
+
   static async removeDuplicates(
     api: SpotifyWebApi,
     playlistModel: PlaylistModel
@@ -241,6 +244,7 @@ export class PlaylistDeduplicator extends BaseDeduplicator {
         const promises = [];
         do {
           const chunk = tracksToRemove.splice(0, 100); // Moves the first n items from tracksToRemove to the variable 'chunk'
+          console.log('promiseForPages.ts:  removeDuplicates running splice of tracksToRemove.');
           (function (playlistModel, chunk, api) {
             promises.push(() =>
               api.removeTracksFromPlaylist(
@@ -294,7 +298,7 @@ export class SavedTracksDeduplicator extends BaseDeduplicator {
           });
 
           for (let i = 0; i < tracks.length; i++) {
-            console.log('deduplicator.ts:  getTracks for SAVED TRACKS got track ' + tracks[i].name)
+            // console.log('deduplicator.ts:  getTracks for SAVED TRACKS got track ' + tracks[i].name)
           }
           resolve(tracks);
         })

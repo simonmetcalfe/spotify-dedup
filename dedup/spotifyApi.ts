@@ -1,6 +1,6 @@
 
 
-import fetch from './customFetch';
+//import fetch from './customFetch';
 export type SpotifyArtistType = {
   id: string;
   name: string;
@@ -82,22 +82,28 @@ function InvalidJSONException(body: string, status: number) {
 const parseAPIResponse = (response: Response): Object =>
   new Promise((resolve) => resolve(response.text()))
     .catch((err) => {
+      console.log('spotifyApi.ts:  parseAPIResponse network exception ' + err.message + ' ' + response.status);
       throw new NetworkException(err.message, response.status);
     })
     .then((responseBody: string) => {
       let parsedJSON: Object = null;
       try {
         parsedJSON = responseBody === '' ? null : JSON.parse(responseBody);
-        console.log('spotifyApi.ts:  parseAPIResponse running with RESPONSE ')// + JSON.stringify(response) + " and RESPONSE BODY " + responseBody)
       } catch (e) {
+        console.log('spotifyApi.ts:  parseAPIResponse invalid JSON exception ' + e.message + ' ' + responseBody);
         // We should never get these unless response is mangled
         // Or API is not properly implemented
         throw new InvalidJSONException(responseBody, response.status);
       }
-      if (response.ok) return parsedJSON;
+      if (response.ok) {
+        console.log('spotifyApi.ts:  parseAPIResponse response OK');
+        return parsedJSON;
+      }
       if (response.status >= 500) {
+        console.log('spotifyApi.ts:  parseAPIResponse server exception ' + responseBody);
         throw new ServerException(parsedJSON, response.status);
       } else {
+        console.log('spotifyApi.ts:  parseAPIResponse application exception ' + responseBody);
         throw new ApplicationException(parsedJSON, response.status);
       }
     });
@@ -121,7 +127,7 @@ export default class SpotifyWebApi {
   }
 
   async getGeneric(url: string, options = {}) {
-    console.log('spotifyApi.ts:  getGeneric called with url ' + url + " and options " + JSON.stringify(options))
+    // console.log('spotifyApi.ts:  getGeneric called with url ' + url + " and options " + JSON.stringify(options))
     const optionsString =
       Object.keys(options).length === 0
         ? ''  // If the length of Options is 0, return a blank string
@@ -179,14 +185,22 @@ export default class SpotifyWebApi {
     playlistId: string,
     uris: Array<string | { uri: string; positions: number[] }>
   ) {
+
     for (let i = 0; i < uris.length; i++) {
-      console.log('spotifyApi.ts:  removeTracksFromPlaylist called with uris ' + uris[i])
+      if (typeof uris[0] == "string") {
+        console.log('spotifyApi.ts:  removeTracksFromPlaylist called with string ' + uris[i].toString)
+      }
+      else {
+        console.log('spotifyApi.ts:  removeTracksFromPlaylist called with uri-positions ' + uris[i].uri + ' ' + uris[i].positions)
+      }
     }
+
     const dataToBeSent = {
       tracks: uris.map((uri) => (typeof uri === 'string' ? { uri: uri } : uri)),
     };
 
-    console.log('spotifyApi.ts:  removeTracksFromPlaylist - the URI data to sent is ' + dataToBeSent)
+    console.log('spotifyApi.ts:  removeTracksFromPlaylist data to be sent to spotify is ' + dataToBeSent);
+
     const res = await fetch(
       `${apiPrefix}/users/${encodeURIComponent(
         userId

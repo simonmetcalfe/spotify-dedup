@@ -63,7 +63,7 @@ export default class {
 
   // The main function that reads and indentifies duplicates
   process = async (api: SpotifyWebApi, user: SpotifyUserType) => {
-    console.log('process.ts:  process async running')
+    // console.log('process.ts:  process async running')
     // const is used to fix the model of currentState, but each object inside is modifyable
     const currentState: {
       toProcess?: number;
@@ -137,10 +137,10 @@ export default class {
       currentState.playlists = playlistsToCheck.map((playlist, index) => // Create a new array with the result of the playlistToPlaylistModel
         playlistToPlaylistModel(playlist, index)
       );
-      console.log('process.ts:  currentState.toProcess and currentState.toDownload set to ' + currentState.playlists.length)
+      // console.log('process.ts:  currentState.toProcess and currentState.toDownload set to ' + currentState.playlists.length)
 
       //TODO:   Remove hacky speedup for a large Spotify account - TESTING ONLY
-      //currentState.playlists.length = 50;
+      currentState.playlists.length = 8;
 
       currentState.toDownload = currentState.playlists.length + 1 // +1 accounts for downloading liked tracks 
       currentState.toProcess = currentState.playlists.length + 1

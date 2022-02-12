@@ -7,7 +7,7 @@ import { SpotifyUserType, SpotifyTrackType } from '../dedup/spotifyApi';
 
 import Process from '../dedup/process';
 
-import { PlaylistDeduplicator, SavedTracksDeduplicator } from '../dedup/deduplicator';
+import { PlaylistDeduplicator } from '../dedup/deduplicator';
 
 import BuyMeACoffee from './bmc';
 import Panel from './panel';
@@ -191,18 +191,27 @@ export default class Main extends React.Component<{
   playTrack = (id) => {
     (async () => {
       console.log('main.tsx:  playTrack playing ' + id)
-      try {
-        await this.props.api.previewTrack(id);
-      }
-      catch (e) {
-        toast.warn('Could not play track.   Make sure you have a Premium subscription and try waking up Spotify by playing a track from the Spotify client.')
-        console.log('main.tsx:  playTrack failed to play track ' + id + '.  ' + e.message + ' ' + e.stack)
-        global['Raven'] &&
-          global['Raven'].captureMessage(
-            `Exception trying to play a track`,
-            {},
-          );
-      }
+      await this.props.api.previewTrack(id)
+        .then(function (result) {
+          // Nothing to do
+        }).catch(function (err) {
+          global['Raven'] &&
+            global['Raven'].captureMessage(
+              `Exception trying to play a track`,
+              {},
+            );
+
+          err.name == 'TypeError' ?
+            toast.warn('Cannot play track.  Check your internet connection.')
+            : err.name == 'ApplicationException' && err.json.error.reason == 'NO_ACTIVE_DEVICE' ?
+              toast.warn('Cannot play track.  Wake up Spotify by playing a song from your Spotify player.')
+              : err.name == 'ApplicationException' && err.json.error.reason == 'PREMIUM_REQUIRED' ?
+                toast.warn('Cannot play track.  You need a premium subscription.')
+                : err.name == 'ApplicationException' && err.status == 401 ?
+                  toast.warn('Connection to Spotify expired.  Reload the page to connect again.')
+                  :
+                  toast.warn('Cannot play track.  An unknown error occurred.')
+        })
     })();
   }
 
@@ -241,6 +250,22 @@ export default class Main extends React.Component<{
       }).join('\n');
 
 
+
+      // Iterate through foreign occurences in playlists
+      console.log('DELETING');
+      basePlaylist.duplicates[trackIndex].inPlaylists.forEach((inPlaylist) => {
+        console.log(`        ${inPlaylist.playlist.name} (${inPlaylist.playlist.id}) pos ${inPlaylist.trackIndex} ${inPlaylist.reason == 'same-id' ? '\n' : '(similar: ' + inPlaylist.trackToRemove.id + ')\n'}`);
+        // FINSIH ME this.state.playlists[inPlaylist.playlistIndex].duplicates.pop[trackIndex];
+        // FINISH ME If the inPlaylsits list is empty, remove the track from the foreign dplicates list altogether
+      });
+
+      // Delete the track from the base playlist
+      // FINISH ME this.state.playlists[basePlaylistIndex].duplicates.pop[trackIndex];
+
+      // UPDATE THE STORE
+
+
+
       // Log the delete
       console.log(`main.tsx:
       Removing ${trackToRemove.name} (${trackToRemove.id})
@@ -254,7 +279,6 @@ export default class Main extends React.Component<{
       else if (basePlaylist.playlist.collaborative) {
         toast.warn('It is not possible to delete duplicates from a collaborative playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.', {});
       } else {
-
 
         /*
         // Delete the track
@@ -285,7 +309,7 @@ export default class Main extends React.Component<{
                 uri: string,
                 index: number,
                 playlistModel: PlaylistModel
-        */
+          */
 
 
 
@@ -297,15 +321,15 @@ export default class Main extends React.Component<{
 
   removeDuplicates = (playlist: PlaylistModel) => {
     (async () => {
-      // console.log('this.state.playlists is ' + JSON.stringify(this.state.playlists))
-
-      // Get the playlists index within the store of playlists
+      // Get the playlists index within the store of playlists - probs not necessary now we have playlistIndex
       const index = this.state.playlists.findIndex(
         (p) => p.playlist.id === playlist.playlist.id
       );
-      console.log('Removing duplicates from playlist ' + playlist.playlist.name + ' with index ' + index)
+
+      console.log(`DELETING ALL ${playlist.duplicates.length} tracks from ${playlist.playlistIndex} ${index} ${playlist.playlist.name} (${playlist.playlist.id}) with state ${this.state.playlists}`)
+
       const playlistModel = this.state.playlists[index];
-      console.log('The duplicates for playlist ' + playlistModel.playlist.name + ' are ' + JSON.stringify(playlistModel.duplicates))
+
       if (playlistModel.playlist.id === 'starred') {
         toast.warn('It is not possible to delete duplicates from your Starred playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.', {});
       }
@@ -313,13 +337,11 @@ export default class Main extends React.Component<{
         toast.warn('It is not possible to delete duplicates from a collaborative playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.', {});
       } else {
         try {
-          console.log('PlaylistDeduplicator.removeDuplicates being called for ' + playlistModel.playlist.name)
           await PlaylistDeduplicator.removeDuplicates(
             this.props.api,
             playlistModel
           );
-          console.log('Making a copy of all playlists (this.state.playlists')
-          const playlistsCopy = [...this.state.playlists];
+          const playlistsCopy = [...this.state.playlists];  // Make a copy of all playlists
           playlistsCopy[index].duplicates = []; // For the copy of all playlists, find the current playlist in the copy, and clear the duplicates
           playlistsCopy[index].status = 'process.items.removed'; // Status is 'Duplicates removed'
           this.setState({ ...this.state, playlists: [...playlistsCopy] }); // State is updated with the copy

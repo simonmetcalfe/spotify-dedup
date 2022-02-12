@@ -39,7 +39,6 @@ export async function retryFetch(
 
       if (attemp === times) {
         console.warn('Max attemps reached');
-
         throw error;
       }
     }

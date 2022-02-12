@@ -5,7 +5,7 @@ export const fetchUserOwnedPlaylists = async (
   api: SpotifyWebApi,
   userId: string
 ) => {
-  console.log('library.ts:  fetchUserOwnedPlaylists is called, about to call promiseForPages and getUserPlaylists')
+  // console.log('library.ts:  fetchUserOwnedPlaylists is called, about to call promiseForPages and getUserPlaylists')
   const pages = await promisesForPages(
     api,
     api.getUserPlaylists(userId, { limit: 50 })
