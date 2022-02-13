@@ -243,8 +243,9 @@ export class PlaylistDeduplicator extends BaseDeduplicator {
           .reverse(); // reverse so we delete the last ones first
         const promises = [];
         do {
-          const chunk = tracksToRemove.splice(0, 100); // Moves the first n items from tracksToRemove to the variable 'chunk'
-          console.log('promiseForPages.ts:  removeDuplicates running splice of tracksToRemove.');
+          //TODO:  Chunk size reduced from 100 to 10 for testing
+          const chunk = tracksToRemove.splice(0, 10); // Moves the first n items from tracksToRemove to the variable 'chunk'
+          console.log('deduplicator.ts:  removeDuplicates running splice of tracksToRemove.');
           (function (playlistModel, chunk, api) {
             promises.push(() =>
               api.removeTracksFromPlaylist(
@@ -262,7 +263,8 @@ export class PlaylistDeduplicator extends BaseDeduplicator {
             Promise.resolve(null)
           )
           .then(() => {
-            playlistModel.duplicates = [];
+            console.log('EVERYTHING DONE?  Promises.length is ' + promises.length)
+            // playlistModel.duplicates = [];  // pointless
             resolve();
           })
           .catch((e) => {

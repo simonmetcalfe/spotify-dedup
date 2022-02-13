@@ -186,18 +186,36 @@ export default class SpotifyWebApi {
     uris: Array<string | { uri: string; positions: number[] }>
   ) {
 
+    let sabotage = false;
+    let urislist = '';
+
     for (let i = 0; i < uris.length; i++) {
       if (typeof uris[0] == "string") {
-        console.log('spotifyApi.ts:  removeTracksFromPlaylist called with string ' + uris[i].toString)
+        urislist += uris[i].toString + ', ';
       }
       else {
-        console.log('spotifyApi.ts:  removeTracksFromPlaylist called with uri-positions ' + uris[i].uri + ' ' + uris[i].positions)
+        let positions = '';
+        for (let n = 0; n < uris[i].positions.length; n++) {
+          positions += uris[i].positions[n] + ',';
+        }
+        urislist += uris[i].uri + ' (' + positions + '), ';
+        // Fabricating failure on Britney Spears - Slumber party
+        if (uris[i].uri == 'spotify:track:6lknMmJZALXxx7emwwZWLX') {
+          console.log('spotifyApi.ts:  removeTracksFromPlaylist FABRICATING FAIL with uri-positions ' + uris[i].uri + ' ' + uris[i].positions)
+          sabotage = true;
+        }
       }
     }
 
-    const dataToBeSent = {
+    console.log('spotifyApi.ts:  removeTracksFromPlaylist called with data ' + urislist);
+
+    let dataToBeSent = {
       tracks: uris.map((uri) => (typeof uri === 'string' ? { uri: uri } : uri)),
     };
+
+    if (sabotage == true) {
+      dataToBeSent = null;
+    }
 
     console.log('spotifyApi.ts:  removeTracksFromPlaylist data to be sent to spotify is ' + dataToBeSent);
 

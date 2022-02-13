@@ -140,7 +140,7 @@ export default class {
       // console.log('process.ts:  currentState.toProcess and currentState.toDownload set to ' + currentState.playlists.length)
 
       //TODO:   Remove hacky speedup for a large Spotify account - TESTING ONLY
-      currentState.playlists.length = 8;
+      // currentState.playlists.length = 8;
 
       currentState.toDownload = currentState.playlists.length + 1 // +1 accounts for downloading liked tracks 
       currentState.toProcess = currentState.playlists.length + 1
