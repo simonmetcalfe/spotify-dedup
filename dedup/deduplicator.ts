@@ -5,7 +5,7 @@ import SpotifyWebApi, {
   SpotifyPlaylistTrackType,
   SpotifySavedTrackType,
 } from './spotifyApi';
-import { PlaylistModel, InPlaylistsModel, DuplicatesModel } from './types';
+import { PlaylistModel, InPlaylistsModel, TrackModel } from './types';
 
 class BaseDeduplicator {
   async removeDuplicates(model) {
@@ -16,31 +16,31 @@ class BaseDeduplicator {
     throw 'Not implemented';
   }
 
-  static findDuplicatedTracksInAllPlaylists(currentPlaylist: PlaylistModel, allPlaylists: Array<PlaylistModel>, savedTracks: Array<DuplicatesModel>) {
-    const result = currentPlaylist.tracks.reduce((duplicates, track, index) => {
-      if (track === null) return duplicates;
-      if (track.id === null) return duplicates;
+  static findDuplicatedTracksInAllPlaylists(currentPlaylist: PlaylistModel, allPlaylists: Array<PlaylistModel>, savedTracks: Array<TrackModel>) {
+    currentPlaylist.tracks.forEach((track, index) => {
+      if (track === null) return;
+      if (track.track.id === null) return;
       let foundInPlaylists: Array<InPlaylistsModel> = []; // Build an array of all places the track is seen, as we iterate through all the user's playlists
-      const seenNameAndArtistKey = `${track.name}:${track.artists[0].name}`.toLowerCase();
+      const seenNameAndArtistKey = `${track.track.name}:${track.track.artists[0].name}`.toLowerCase();
       allPlaylists.forEach(function (playlistToCompare, playlistToCompareIndex) {
-        if (currentPlaylist.playlist.name != playlistToCompare.playlist.name) { // Don't compare playlist with itself
+        if (currentPlaylist.playlist.id != playlistToCompare.playlist.id) { // Don't compare playlist with itself //TODO:  Was previously .name, needs testing
           //console.log('deduplicator.ts:  Comparing ' + playlist.playlist.name + ' with ' + playlistModel.playlist.name);
           playlistToCompare.tracks.forEach(function (trackToCompare, trackToCompareIndex) {
             let isDuplicate = '';
             //console.log('Comparing playlist ' + playlistModel.playlist.name + ' and track ' + spotifyTrackType.name)
-            if (track.id === trackToCompare.id) {
+            if (track.track.id === trackToCompare.track.id) {
               //console.log('Dupe of ' + trackToCompare.name + ' (' + index + ') found in ' + playlistToCompare.playlist.name + ' (' + playlistToCompareIndex + ') at pos ' + trackToCompareIndex + ' when playlist ' + currentPlaylist.playlist.name + ' is compared with ' + playlistToCompare.playlist.name)
               isDuplicate = 'same-id';
             }
-            else if (seenNameAndArtistKey === `${trackToCompare.name}:${trackToCompare.artists[0].name}`.toLowerCase()
-              && Math.abs(track.duration_ms - trackToCompare.duration_ms) < 2000) {
+            else if (seenNameAndArtistKey === `${trackToCompare.track.name}:${trackToCompare.track.artists[0].name}`.toLowerCase()
+              && Math.abs(track.track.duration_ms - trackToCompare.track.duration_ms) < 2000) {
               //console.log('Similar dupe of ' + trackToCompare.name + ' found in ' + playlistToCompare.playlist.name)
               isDuplicate = 'same-name-artist';
             }
             if (isDuplicate != '') {
               foundInPlaylists.push({
-                trackIndex: trackToCompareIndex, // The location of the duplicate track in the foreign playlist 
-                playlistIndex: playlistToCompareIndex, // The location of the foreign playlist in the store
+                foreignPlaylistIndex: playlistToCompare.origIndex, // The location of the foreign playlist in the store
+                foreignTrackIndex: trackToCompare.origIndex, // The location of the duplicate track in the foreign playlist 
                 reason: isDuplicate,
                 playlist: playlistToCompare.playlist,
                 trackToRemove: trackToCompare // Save the the track that needs to be removed, whether it be identical or similar
@@ -53,11 +53,11 @@ class BaseDeduplicator {
       // Check if it is a liked song, and if so marked as liked + set inPlaylists for the liked song so it knows it is in a playlist
       savedTracks.forEach(function (savedTrackToCompare) {
         let isDuplicate = '';
-        if (track.id === savedTrackToCompare.track.id) {
+        if (track.track.id === savedTrackToCompare.track.id) {
           isDuplicate = 'same-id';
         }
         else if (seenNameAndArtistKey === `${savedTrackToCompare.track.name}:${savedTrackToCompare.track.artists[0].name}`.toLowerCase()
-          && Math.abs(track.duration_ms - savedTrackToCompare.track.duration_ms) < 2000) {
+          && Math.abs(track.track.duration_ms - savedTrackToCompare.track.duration_ms) < 2000) {
           isDuplicate = 'same-name-artist';
         }
         if (isDuplicate != '') {
@@ -65,8 +65,8 @@ class BaseDeduplicator {
           track.isLiked = true;
           // Tell saved/liked entry which playlist(s) it also appears in
           savedTrackToCompare.inPlaylists.push({
-            trackIndex: index, // Index of the current track in its playlist
-            playlistIndex: currentPlaylist.playlistIndex, // The location of the playlist in the store
+            foreignPlaylistIndex: currentPlaylist.origIndex, // The location of the playlist in the store
+            foreignTrackIndex: track.origIndex, // Index of the current track in its playlist
             reason: isDuplicate,
             playlist: currentPlaylist.playlist,
             trackToRemove: track // Save the the track that needs to be removed, whether it be identical or similar
@@ -74,21 +74,9 @@ class BaseDeduplicator {
         }
       })
 
-      // Finally after iterating through all playlists, if track was found in 1 or more playlists (foundInPlaylists[] is not empty), add the duplicate
-      if (foundInPlaylists.length > 0) {
-        //console.log('deduplicator.ts:  Duplicates found for ' + track.name + ' and the foundInPlaylists array size is ' + foundInPlaylists.length)
-        duplicates.push({
-          trackIndex: index,
-          track: track,
-          inPlaylists: foundInPlaylists
-        })
-      } else {
-        //console.log('deduplicator.ts:  NO duplicates found for ' + track.name)
-      }
-
-      return duplicates;
+      track.inPlaylists = foundInPlaylists; // Update the track with its found locations.  
+      return track;
     }, []);
-    return result;
   }
 
   //TODO:  This is not used, consider removing
@@ -186,91 +174,63 @@ export class PlaylistDeduplicator extends BaseDeduplicator {
     });
   }
 
-  // TODO:  THIS IS AN ENTIRELY NEW UNFINISHED FUNCTION!  REVIEW AND FIX OR DELETE
-
-  static async removeTrack(
-    api: SpotifyWebApi,
-    uri: string,
-    index: number,
-    playlistModel: PlaylistModel
-  ) {
-    return Promise.resolve().then(function () {
-      console.log('Deduplicator.ts:  Removing track from playlist')
-      if (playlistModel.playlist.id === 'starred') {
-        return Promise.reject('It is not possible to delete duplicates from your Starred playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.')
-      }
-      if (playlistModel.playlist.collaborative) {
-        return Promise.reject('It is not possible to delete duplicates from a collaborative playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.')
-      }
-      else {
-        let track = [uri];
-        return api.removeTracksFromPlaylist(
-          playlistModel.playlist.owner.id,
-          playlistModel.playlist.id,
-          track
-        )
-      }
-    }).then(function (result) {
-      // Do some processing if needed?
-      return Promise.resolve()
-    }).catch(function (e) {
-      return Promise.reject('deduplicator.ts:  Could not remove track from playlist!!')
-    })
-  }
-
 
   static async removeDuplicates(
     api: SpotifyWebApi,
-    playlistModel: PlaylistModel
+    playlistModel: PlaylistModel,
   ) {
     return new Promise<void>((resolve, reject) => {
-      console.log('deduplicator.ts:  removeDuplicates for playlist tracks is called')
+
       if (playlistModel.playlist.id === 'starred') {
-        reject(
-          'It is not possible to delete duplicates from your Starred playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.'
-        );
+        reject(new Error('cannot_remove_track_starrred_playlist')); // Might be obsolete now 
       }
       if (playlistModel.playlist.collaborative) {
-        reject(
-          'It is not possible to delete duplicates from a collaborative playlist using this tool since this is not supported in the Spotify Web API. You will need to remove these manually.'
-        );
-      } else {
-        const tracksToRemove = playlistModel.duplicates
-          .map((d) => ({
-            uri: d.track.linked_from ? d.track.linked_from.uri : d.track.uri,
-            positions: [d.trackIndex],
-          }))
-          .reverse(); // reverse so we delete the last ones first
-        const promises = [];
-        do {
-          //TODO:  Chunk size reduced from 100 to 10 for testing
-          const chunk = tracksToRemove.splice(0, 10); // Moves the first n items from tracksToRemove to the variable 'chunk'
-          console.log('deduplicator.ts:  removeDuplicates running splice of tracksToRemove.');
-          (function (playlistModel, chunk, api) {
-            promises.push(() =>
-              api.removeTracksFromPlaylist(
-                playlistModel.playlist.owner.id,
-                playlistModel.playlist.id,
-                chunk
-              )
-            );
-          })(playlistModel, chunk, api);
-        } while (tracksToRemove.length > 0);
-
-        promises
-          .reduce(
-            (promise, func) => promise.then(() => func()),
-            Promise.resolve(null)
-          )
-          .then(() => {
-            console.log('EVERYTHING DONE?  Promises.length is ' + promises.length)
-            // playlistModel.duplicates = [];  // pointless
-            resolve();
-          })
-          .catch((e) => {
-            reject(e);
-          });
+        reject(new Error('cannot_remove_track_collaborative_playlist')); // Removal from collaboative playlists IS supported (probs only if owned) but is rejected for safety 
       }
+
+      let tracksToRemove;
+
+      tracksToRemove = playlistModel.tracks
+        .map((d) => ({
+          uri: d.track.linked_from ? d.track.linked_from.uri : d.track.uri,
+          positions: [d.arrayIndex],
+        }))
+        .reverse(); // reverse so we delete the last ones first
+
+
+      tracksToRemove.forEach(function () {
+        console.log('TTR ' + JSON.stringify(tracksToRemove))
+      })
+
+      const promises = [];
+      do {
+        //TODO:  Chunk size reduced from 100 to 10 for testing
+        const chunk = tracksToRemove.splice(0, 10); // Moves the first n items from tracksToRemove to the variable 'chunk'
+        console.log('deduplicator.ts:  removeDuplicates running splice of tracksToRemove.');
+        (function (playlistModel, chunk, api) {
+          promises.push(() =>
+            api.removeTracksFromPlaylist(
+              playlistModel.playlist.owner.id,
+              playlistModel.playlist.id,
+              chunk
+            )
+          );
+        })(playlistModel, chunk, api);
+      } while (tracksToRemove.length > 0);
+
+      promises
+        .reduce(
+          (promise, func) => promise.then(() => func()),
+          Promise.resolve(null)
+        )
+        .then(() => {
+          console.log('EVERYTHING DONE?  Promises.length is ' + promises.length)
+          // playlistModel.duplicates = [];  // pointless
+          resolve();
+        })
+        .catch((e) => {
+          reject(e);
+        });
     });
   }
 }

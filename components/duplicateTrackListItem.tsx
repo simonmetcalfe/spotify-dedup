@@ -4,7 +4,7 @@ import { BadgePlay2 } from './badgePlay2';
 import { BadgeRemove3 } from './badgeRemove3';
 import { BadgeLiked } from './badgeLiked';
 
-export const DuplicateTrackListItem = (props: { key, trackName, trackArtistName, thisPlaylistName, inPlaylists, isLiked, onPlay: () => void, onLiked: (likedCurrentStatus) => void, onRemove: (inPlaylistsIndex) => void }) => {
+export const DuplicateTrackListItem = (props: { trackName, trackArtistName, thisPlaylistName, inPlaylists, isLiked, onPlay: () => void, onLiked: (likedCurrentStatus) => void, onRemove: (inPlaylistsIndex) => void }) => {
   // TODO: Translations are breaking the component, fix them later
   /*const { t, i18n } = useTranslation();*/
 

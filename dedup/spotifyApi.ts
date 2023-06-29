@@ -13,7 +13,6 @@ export type SpotifyTrackType = {
   linked_from: SpotifyTrackType;
   name: string;
   uri: string;
-  isLiked: boolean;
   // TODO:  Do we need the location in the playlist 
   // in_playlists?: Array<{ url: SpotifyPlaylistType }>; // Originally planned to store inPlaylists within the track, now it is in the PlaylistModel 
 };
@@ -201,8 +200,8 @@ export default class SpotifyWebApi {
         urislist += uris[i].uri + ' (' + positions + '), ';
         // Fabricating failure on Britney Spears - Slumber party
         if (uris[i].uri == 'spotify:track:6lknMmJZALXxx7emwwZWLX') {
-          console.log('spotifyApi.ts:  removeTracksFromPlaylist FABRICATING FAIL with uri-positions ' + uris[i].uri + ' ' + uris[i].positions)
-          sabotage = true;
+          //console.log('spotifyApi.ts:  removeTracksFromPlaylist FABRICATING FAIL with uri-positions ' + uris[i].uri + ' ' + uris[i].positions)
+          //sabotage = true;
         }
       }
     }

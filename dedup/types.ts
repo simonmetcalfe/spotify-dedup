@@ -6,43 +6,31 @@ import { ReactElement } from 'react';
 // Also added to PlaylistModel is an array of SpotifyTrackType to store the tracks.  This is because the Spotify playlist model only has 
 // an array of links (href: string) and not the full track information which is required by SpotifyDedup
 export type PlaylistModel = {
-  playlistIndex: number; // The location of this playlist in the playlists store
+  origIndex: number; // Initial array index, used to identify playlist from inPlaylists entries 
   playlist: SpotifyPlaylistType;
-  duplicates: Array<DuplicatesModel>;
-  tracks: Array<SpotifyTrackType>; // Additional array as we now need to store the unprocessed tracks inside so they can be processed later on
+  tracks: Array<TrackModel> // Additional array as we now need to store the unprocessed tracks inside so they can be processed later on
   status: string;
   processed: boolean;
   downloaded: boolean; // New status because we are downloading and processing separately
 };
 
-export type DuplicatesModel = {
-  trackIndex: number;
-  //reason: string;  // An reason is required for each occurance in another playlist, hence reason is moved to the Playlists array
+export type TrackModel = {
+  origIndex: number; // Initial array index, used to identify track from inPlaylists entries
+  arrayIndex: number; // Current array index, maintained by UI .filter method and to pass to removeSingleDuplicate()
   track: SpotifyTrackType;
   inPlaylists: Array<InPlaylistsModel>;
+  isLiked: boolean
 }
 
-// New model for storing a list of the playlists that the track can be found it
+// New model for storing duplicate info - a list of the playlists that the track can be found in
 // We save the reason, whether it is 'same-id' or 'same-name-artist'
 export type InPlaylistsModel = {
-  trackIndex: number;  // The location of the duplicate track in the foreign playlist
-  playlistIndex: number; // The location of the foreign playlist in the store
+  foreignPlaylistIndex: number; // The location of the foreign playlist of the duplicate
+  foreignTrackIndex: number;  // The location of the track in the foreign playlist
   reason: string;
   playlist: SpotifyPlaylistType;
-  trackToRemove: SpotifyTrackType; // If the track is not identical, store the similar track so we can delete it
+  trackToRemove: TrackModel; // If the track is not identical, store the similar track so we can delete it
 }
-
-
-export type PlaylistCsvExportModel = {
-  playlist_id: string;
-  playlist_name: string;
-  playlist_owner: string;
-  track_id: string;
-  track_name: string;
-  liked: boolean;
-  track_artist: string;
-  track_duration: number;
-};
 
 export type DuplicatesCsvExportModel = {
   playlist_id: string;
