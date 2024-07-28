@@ -205,7 +205,7 @@ export class PlaylistDeduplicator extends BaseDeduplicator {
       const promises = [];
       do {
         //TODO:  Chunk size reduced from 100 to 10 for testing
-        const chunk = tracksToRemove.splice(0, 10); // Moves the first n items from tracksToRemove to the variable 'chunk'
+        const chunk = tracksToRemove.splice(0, 100); // Moves the first n items from tracksToRemove to the variable 'chunk'
         console.log('deduplicator.ts:  removeDuplicates running splice of tracksToRemove.');
         (function (playlistModel, chunk, api) {
           promises.push(() =>
