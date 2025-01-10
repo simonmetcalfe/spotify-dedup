@@ -377,8 +377,7 @@ export default class Main extends React.Component<{
           (total, p) => total + p.tracks.reduce(
             (total2, t) => total2 + t.inPlaylists.length, 0), 0) // Removed saved tracks from the count // + this.state.savedTracks.tracks.length; 
     return (
-
-      <div>
+      (<div>
         <ToastContainer
           position="bottom-right"
           autoClose={5000}
@@ -390,7 +389,6 @@ export default class Main extends React.Component<{
           pauseOnHover
           theme="colored"
         />
-
         <CSVLink
           headers={[
             //TODO - Don't duplicate the header map
@@ -414,24 +412,22 @@ export default class Main extends React.Component<{
         >
           Download Duplicates CSV
         </CSVLink>
-
         <button onClick={() => this.saveState()}>
           Print state
         </button>
-
         <Status toProcess={this.state.toProcess} />
         <Panel>
           {this.state.toProcess === null && (
             <Translation>{(t) => t('process.reading-library')}</Translation>
           )}
           {this.state.toDownload > 0 && (
-            'Downloading ' + this.state.toDownload + ' playlist(s)...'
+            ('Downloading ' + this.state.toDownload + ' playlist(s)...')
             // TODO:  Reinstate translations here
             // <Translation>{(t) => t('process.reading-library')}</Translation>
           )}
 
           {this.state.toDownload === 0 && this.state.toProcess > 0 && (
-            'All playlists downloaded.  Crunching ' + this.state.toProcess + ' playlist(s)...'
+            ('All playlists downloaded.  Crunching ' + this.state.toProcess + ' playlist(s)...')
             // TODO:  Reinstate translations here
             /*
             <Translation>
@@ -471,8 +467,6 @@ export default class Main extends React.Component<{
             </span>
           )}
         </Panel>
-
-
         <style jsx>
           {`
         .bd {
@@ -554,7 +548,7 @@ export default class Main extends React.Component<{
       }
       `}
         </style>
-      </div>
+      </div>)
     );
   }
 }

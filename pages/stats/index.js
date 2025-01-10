@@ -1,4 +1,3 @@
-import SpotifyAppStats from 'spotify-app-stats';
 import Page from '../../layouts/main';
 import Header from '../../components/head';
 import Head from 'next/head';
@@ -94,9 +93,6 @@ export default function Stats({ data }) {
             <p>
               This page shows open data about Spotify Dedup. The metrics are
               gathered using{' '}
-              <a href="https://github.com/JMPerez/spotify-app-stats">
-                spotify-app-stats
-              </a>
               , a npm package to read data from a Spotify app in Spotify's
               developer site dashboard.
             </p>
