@@ -12,6 +12,7 @@ export type SpotifyTrackType = {
   id: string;
   linked_from: SpotifyTrackType;
   name: string;
+  added_at: string; // We must store added_at here becuase it is only acessible during the deduplicator.ts getTracks() process when 'tracks' (SportifyTrackType) is extracted from SpotifySavedTrackType and SpotifyPlaylistTrackType 
   uri: string;
   // TODO:  Do we need the location in the playlist 
   // in_playlists?: Array<{ url: SpotifyPlaylistType }>; // Originally planned to store inPlaylists within the track, now it is in the PlaylistModel 

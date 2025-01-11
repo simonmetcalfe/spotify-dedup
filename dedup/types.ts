@@ -38,6 +38,7 @@ export type DuplicatesCsvExportModel = {
   playlist_owner: string;
   track_id: string;
   track_name: string;
+  added_at: string;
   liked: boolean;
   track_artist: string;
   track_duration: number;
