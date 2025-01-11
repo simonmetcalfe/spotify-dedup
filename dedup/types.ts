@@ -44,6 +44,8 @@ export type DuplicatesCsvExportModel = {
   track_duration: number;
   in_playlists: string;
   similar_in_playlists: string;
+  uri: string;
+  url: string;
 };
 
 // Removed

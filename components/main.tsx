@@ -106,7 +106,9 @@ export default class Main extends React.Component<{
           track_artist: this.state.savedTracks.tracks[i].track.artists[0].name,
           track_duration: this.state.savedTracks.tracks[i].track.duration_ms,
           in_playlists: inPlaylists,
-          similar_in_playlists: similarInPlaylists
+          similar_in_playlists: similarInPlaylists,
+          uri: this.state.savedTracks.tracks[i].track.uri,
+          url: this.state.savedTracks.tracks[i].track.external_urls.spotify
         })
       }
     }
@@ -136,7 +138,9 @@ export default class Main extends React.Component<{
           track_artist: this.state.playlists[i].tracks[n].track.artists[0].name,
           track_duration: this.state.playlists[i].tracks[n].track.duration_ms,
           in_playlists: inPlaylists,
-          similar_in_playlists: similarInPlaylists
+          similar_in_playlists: similarInPlaylists,
+          uri: this.state.playlists[i].tracks[n].track.uri,
+          url: this.state.playlists[i].tracks[n].track.external_urls.spotify
         })
       }
     }
@@ -406,7 +410,9 @@ export default class Main extends React.Component<{
             { label: 'track_duration', key: 'track_duration' },
             // { label: 'track_url', key: 'track_url' },
             { label: 'in_playlists', key: 'in_playlists' },
-            { label: 'similar_in_playlists', key: 'similar_in_playlists' }
+            { label: 'similar_in_playlists', key: 'similar_in_playlists' },
+            { label: 'uri', key: 'uri' },
+            { label: 'url', key: 'url' }
           ]}
           data={this.getDuplicatesCsv()}
           filename={"spotify-dedup-duplicates.csv"}

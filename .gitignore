@@ -29,3 +29,4 @@ yarn.lock
 *.lock
 yarn.lock
 dedup/oauthConfig.ts
+package-lock.json
