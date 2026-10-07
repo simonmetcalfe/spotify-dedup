@@ -1,5 +1,7 @@
 # Spotify Deduplicator
 
+> 🛑 **Experimental fork:** this fork checks for duplicate tracks _between_ playlists. Output via the UI is disabled; duplicate tracks are only reported in a CSV export.
+
 [![Greenkeeper badge](https://badges.greenkeeper.io/JMPerez/spotify-dedup.svg)](https://greenkeeper.io/)
 
 Have you ever wanted to remove duplicated songs from your Spotify library? Now you can find and remove them using Spotify Dedup.

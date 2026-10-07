@@ -10,8 +10,8 @@ const Nav = () => (
   <nav>
     <ul>
       <li>
-        <Link href="/">
-          <a>Home</a>
+        <Link href="/" legacyBehavior>
+          Home
         </Link>
       </li>
       {links.map(({ href, label }) => (

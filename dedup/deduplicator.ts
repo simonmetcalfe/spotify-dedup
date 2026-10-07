@@ -162,7 +162,9 @@ export class PlaylistDeduplicator extends BaseDeduplicator {
         .then((pages) => {
           pages.forEach((page) => {
             page.items.forEach((item: SpotifyPlaylistTrackType) => {
-              tracks.push(item && item.track);
+              let tempTrack = item; // Create a tempory SpotifyTrackType and set the added_at value only found in SpotifySavedTrackType and SpotifyPlaylistTrackType
+              tempTrack.track.added_at = item.added_at;
+              tracks.push(tempTrack.track); //This was (item && item.track) but we have no idea why
             });
           });
           for (let i = 0; i < tracks.length; i++) {
@@ -255,7 +257,9 @@ export class SavedTracksDeduplicator extends BaseDeduplicator {
         .then((pages) => {
           pages.forEach((page) => {
             page.items.forEach((item: SpotifySavedTrackType) => {
-              tracks.push(item.track);
+              let tempTrack = item; // Create a tempory SpotifyTrackType and set the added_at value only found in SpotifySavedTrackType and SpotifyPlaylistTrackType
+              tempTrack.track.added_at = item.added_at;
+              tracks.push(tempTrack.track);
             });
           });
 
