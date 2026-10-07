@@ -23,10 +23,11 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# lockfiles (not tracked)
 package-lock.json
-yarn.lock
 yarn.lock
 *.lock
-yarn.lock
+
+# local Spotify client ID
 dedup/oauthConfig.ts
-package-lock.json
